@@ -2,11 +2,11 @@
 Wellbeing-Companion — Flask App
 A responsive web app for student health and wellbeing (SDG 3).
 All user data stays in the browser via localStorage.
-AI image analysis via DeepSeek Vision API.
+AI image analysis via Mistral Vision API (free tier available).
 """
 import os
-import base64
 import json
+import base64
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
@@ -14,10 +14,10 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-# DeepSeek API client (OpenAI-compatible)
-deepseek = OpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY", ""),
-    base_url="https://api.deepseek.com"
+# Mistral API client (OpenAI-compatible)
+mistral = OpenAI(
+    api_key=os.environ.get("MISTRAL_API_KEY", ""),
+    base_url="https://api.mistral.ai/v1"
 )
 
 # ---- Prompts for each analysis type ----
@@ -89,32 +89,28 @@ def service_worker():
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_image():
-    """Analyze an image using DeepSeek Vision API.
-    Accepts JSON: { image: "<base64>", type: "food"|"water"|"study" }
+    """Analyze an image using Mistral Vision API (pixtral-12b).
+    Accepts JSON: { image: "<base64 data URI>", type: "food"|"water"|"study" }
     Returns structured analysis as JSON.
     """
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    image_b64 = data.get("image", "")
+    image_data_uri = data.get("image", "")
     analysis_type = data.get("type", "")
 
-    if not image_b64 or analysis_type not in PROMPTS:
+    if not image_data_uri or analysis_type not in PROMPTS:
         return jsonify({"error": "Missing image or invalid type"}), 400
 
-    # Strip data URI prefix if present
-    if "," in image_b64:
-        image_b64 = image_b64.split(",", 1)[1]
-
     try:
-        response = deepseek.chat.completions.create(
-            model="deepseek-chat",
+        response = mistral.chat.completions.create(
+            model="pixtral-12b-2409",
             messages=[{
                 "role": "user",
                 "content": [
                     {"type": "text", "text": PROMPTS[analysis_type]},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}}
+                    {"type": "image_url", "image_url": {"url": image_data_uri}}
                 ]
             }],
             max_tokens=500,
@@ -125,11 +121,12 @@ def analyze_image():
 
         # Parse the JSON from the response (handle markdown code blocks)
         if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1]
-            if raw.endswith("```"):
-                raw = raw[:-3]
-            raw = raw.strip()
-            if raw.startswith("json"):
+            lines = raw.split("\n")
+            lines = lines[1:] if len(lines) > 1 else lines
+            if lines[-1].strip() == "```":
+                lines = lines[:-1]
+            raw = "\n".join(lines).strip()
+            if raw.lower().startswith("json"):
                 raw = raw[4:].strip()
 
         result = json.loads(raw)
