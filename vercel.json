@@ -1,13 +1,9 @@
 {
   "functions": {
     "api/analyze.py": {
-      "runtime": "python3.13",
       "maxDuration": 30
     }
   },
-  "rewrites": [
-    { "source": "/api/analyze", "destination": "/api/analyze" }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",

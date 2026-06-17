@@ -1,7 +1,6 @@
 """
 Vercel Serverless Function — AI Image Analysis
-Called by the frontend at POST /api/analyze
-Uses Mistral Vision API (pixtral-12b), free tier available.
+POST /api/analyze — Mistral Vision API (pixtral-12b), free tier.
 """
 import os
 import json
@@ -12,8 +11,7 @@ PROMPTS = {
         "Analyze this food photo and estimate its nutritional content. "
         "Return ONLY valid JSON (no markdown, no extra text) in this exact format:\n"
         '{"name":"...","calories":000,"protein_g":00,"carbs_g":00,"fat_g":00,"healthScore":0,"description":"..."}\n'
-        "healthScore is 1-5 (1=unhealthy, 5=very healthy). Be realistic with estimates. "
-        "If you cannot identify any food, return: {\"error\":\"No food detected\"}"
+        "healthScore is 1-5 (1=unhealthy, 5=very healthy). Be realistic with estimates."
     ),
     "water": (
         "Look at this photo and count how many cups/glasses/bottles of water are visible. "
@@ -57,8 +55,11 @@ def handler(request):
     image_data_uri = body.get("image", "")
     analysis_type = body.get("type", "")
 
-    if not image_data_uri or analysis_type not in PROMPTS:
-        return _cors(400, {"error": "Missing image or invalid type"})
+    if analysis_type not in PROMPTS:
+        return _cors(400, {"error": "Missing image or invalid type (use: food, water, study)"})
+
+    if not image_data_uri:
+        return _cors(400, {"error": "Missing image"})
 
     try:
         response = client.chat.completions.create(
@@ -104,8 +105,3 @@ def _cors(status, data):
         },
         "body": json.dumps(data)
     }
-
-
-# Vercel entry point
-def allow_request(request):
-    return handler(request)
