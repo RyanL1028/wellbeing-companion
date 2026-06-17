@@ -3,7 +3,7 @@
  * Provides offline support via cache-first strategy.
  * After first visit, the app works without internet.
  */
-const CACHE_NAME = 'wellness-v1';
+const CACHE_NAME = 'wellness-v2';
 
 // Assets to cache on install (all HTML pages + static resources)
 const PRE_CACHE = [
@@ -12,9 +12,12 @@ const PRE_CACHE = [
     '/physical-health',
     '/nutrition',
     '/study-life',
-    '/static/style.css',
+    '/auth',
+    '/static/style.css?v=3',
     '/static/storage.js',
     '/static/app.js',
+    '/static/auth.js',
+    '/static/firebase-config.js',
     '/static/manifest.json'
 ];
 
