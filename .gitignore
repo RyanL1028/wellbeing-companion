@@ -9,6 +9,10 @@ venv/
 .firebase/
 .firebase/cache/
 
+# Secrets (real config lives here, example is checked in)
+static/firebase-config.js
+public/static/firebase-config.js
+
 # OS
 .DS_Store
 Thumbs.db
