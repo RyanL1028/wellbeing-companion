@@ -12,7 +12,7 @@ const PROMPTS = {
 };
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response("", {
@@ -38,7 +38,7 @@ export default {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${MISTRAL_API_KEY}`
+          "Authorization": `Bearer ${env.MISTRAL_API_KEY}`
         },
         body: JSON.stringify({
           model: "pixtral-12b-2409",
