@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set page_id = "mental" %}
+{% block title %}Mental Health — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">🧠 Mental Wellbeing</h2>
+
+    <!-- Mood Logger -->
+    <div class="card">
+        <h3 class="card-title">Mood Check-in</h3>
+        <p class="card-subtitle">How are you feeling right now?</p>
+        <div class="mood-emoji-picker" id="mood-picker">
+            <button class="mood-btn" data-mood="1" aria-label="Very bad">😢</button>
+            <button class="mood-btn" data-mood="2" aria-label="Bad">😟</button>
+            <button class="mood-btn" data-mood="3" aria-label="Okay">😐</button>
+            <button class="mood-btn" data-mood="4" aria-label="Good">😊</button>
+            <button class="mood-btn" data-mood="5" aria-label="Great">🤩</button>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+            <label for="mood-note">Note (optional)</label>
+            <input type="text" id="mood-note" placeholder="What's on your mind?" maxlength="200">
+        </div>
+        <div id="mood-feedback" class="feedback-msg" style="display:none;"></div>
+
+        <!-- Last 7 days mood dots -->
+        <div class="mood-history" id="mood-history">
+            <h4>This Week</h4>
+            <div class="mood-dots" id="mood-dots"></div>
+        </div>
+    </div>
+
+    <!-- Breathing Exercise -->
+    <div class="card">
+        <h3 class="card-title">Breathing Exercise</h3>
+        <p class="card-subtitle">4-7-8 technique: inhale 4s, hold 7s, exhale 8s</p>
+        <div class="breathing-container">
+            <div class="breathing-circle" id="breathing-circle">
+                <span class="breathing-phase" id="breathing-phase">Ready</span>
+                <span class="breathing-timer" id="breathing-timer">00:00</span>
+            </div>
+            <button class="btn btn-primary btn-full" id="breathing-start">Start Breathing</button>
+            <button class="btn btn-secondary btn-full" id="breathing-stop" style="display:none;">Stop</button>
+        </div>
+    </div>
+
+    <!-- Crisis Resources (hidden behind toggle for discretion) -->
+    <div class="card">
+        <button class="btn btn-outline btn-full" id="crisis-toggle">
+            <span>🆘</span> Need Help? (Crisis Resources)
+        </button>
+        <div class="crisis-resources" id="crisis-resources" style="display:none;">
+            <h4>You are not alone. Reach out.</h4>
+            <div class="resource-item">
+                <strong>Samaritans Hong Kong (24-hour)</strong>
+                <a href="tel:28960000" class="resource-phone">2896 0000</a>
+                <p>Free, confidential emotional support — 24 hours</p>
+            </div>
+            <div class="resource-item">
+                <strong>Suicide Prevention Services</strong>
+                <a href="tel:23820000" class="resource-phone">2382 0000</a>
+                <p>Hotline for those in emotional distress</p>
+            </div>
+            <div class="resource-item">
+                <strong>Mental Health Support Hotline (Gov't)</strong>
+                <a href="tel:18111" class="resource-phone">18111</a>
+                <p>24/7 government mental health support hotline</p>
+            </div>
+            <div class="resource-item">
+                <strong>Caritas Family Crisis Support</strong>
+                <a href="tel:18288" class="resource-phone">18288</a>
+                <p>24-hour family crisis support centre</p>
+            </div>
+            <div class="resource-item">
+                <strong>Student Counseling</strong>
+                <p>Check your school or university's counseling services for free support.</p>
+            </div>
+            <p class="resource-note">If this is a life-threatening emergency, call <strong>999</strong> or go to your nearest hospital A&E department.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

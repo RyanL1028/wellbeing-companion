@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% set page_id = "study" %}
+{% block title %}Study-Life Balance — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">📚 Study-Life Balance</h2>
+
+    <!-- Pomodoro Timer -->
+    <div class="card">
+        <h3 class="card-title">Pomodoro Timer</h3>
+        <p class="card-subtitle">25 minutes focus · 5 minutes break</p>
+        <div class="pomodoro-container">
+            <div class="pomodoro-ring" id="pomodoro-ring">
+                <svg viewBox="0 0 200 200" class="pomodoro-svg">
+                    <circle class="pomodoro-bg" cx="100" cy="100" r="90"/>
+                    <circle class="pomodoro-fill" cx="100" cy="100" r="90" id="pomodoro-circle"/>
+                </svg>
+                <div class="pomodoro-display">
+                    <span class="pomodoro-time" id="pomodoro-time">25:00</span>
+                    <span class="pomodoro-session" id="pomodoro-session-label">Focus Session</span>
+                </div>
+            </div>
+            <div class="pomodoro-controls">
+                <button class="btn btn-primary" id="pomodoro-play" aria-label="Start timer">
+                    ▶ Start
+                </button>
+                <button class="btn btn-secondary" id="pomodoro-pause" style="display:none;" aria-label="Pause timer">
+                    ⏸ Pause
+                </button>
+                <button class="btn btn-outline" id="pomodoro-reset" aria-label="Reset timer">
+                    ↺ Reset
+                </button>
+            </div>
+            <div class="pomodoro-stats">
+                <span>Sessions completed today: <strong id="pomodoro-count">0</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Break Reminder Modal (hidden by default) -->
+    <div class="modal-overlay" id="break-modal" style="display:none;">
+        <div class="modal-card">
+            <span class="modal-emoji">☕</span>
+            <h3>Time for a longer break!</h3>
+            <p>You've completed 2 focus sessions. Take a 15-minute break to recharge.</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="break-acknowledge">Got it, thanks!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Session Logger -->
+    <div class="card">
+        <h3 class="card-title">Log Study Time</h3>
+        <div class="form-group">
+            <label for="study-subject">Subject</label>
+            <input type="text" id="study-subject" placeholder="e.g., Math, History, Programming" maxlength="50">
+        </div>
+        <div class="form-group">
+            <label for="study-minutes">Minutes Studied</label>
+            <input type="number" id="study-minutes" min="1" max="600" value="25" placeholder="Minutes">
+        </div>
+        <button class="btn btn-primary btn-full" id="study-save">Log Study Session</button>
+        <div id="study-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <!-- Today's Study Summary -->
+    <div class="card">
+        <h3 class="card-title">Today's Study Time</h3>
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill study-fill" id="study-bar" style="width:0%;"></div>
+            </div>
+            <p class="progress-text" id="study-progress-text">0 / 120 minutes goal</p>
+        </div>
+        <div class="study-log">
+            <h4>Today's Sessions</h4>
+            <ul id="study-list" class="log-list"></ul>
+        </div>
+    </div>
+
+    <!-- Focus Tips -->
+    <div class="card">
+        <h3 class="card-title">Focus Tips</h3>
+        <div class="tips-accordion">
+            <details class="tip-item">
+                <summary>🎯 The 2-minute rule</summary>
+                <p>If a task takes less than 2 minutes, do it now. Don't let small tasks pile up.</p>
+            </details>
+            <details class="tip-item">
+                <summary>📵 Phone away</summary>
+                <p>Put your phone in another room or use focus mode. Out of sight, out of mind.</p>
+            </details>
+            <details class="tip-item">
+                <summary>⏰ Study in blocks</summary>
+                <p>Use the Pomodoro technique: 25 minutes of focus, then a 5-minute break.</p>
+            </details>
+            <details class="tip-item">
+                <summary>🎵 Background sounds</summary>
+                <p>Instrumental music or white noise can improve focus. Avoid lyrics while studying.</p>
+            </details>
+            <details class="tip-item">
+                <summary>📝 Active recall</summary>
+                <p>Test yourself instead of re-reading. Active recall is one of the most effective study methods.</p>
+            </details>
+            <details class="tip-item">
+                <summary>😴 Sleep matters</summary>
+                <p>Sleep is when your brain consolidates memories. Pulling an all-nighter hurts more than it helps.</p>
+            </details>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% set page_id = "nutrition" %}
+{% block title %}Nutrition — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">🥗 Nutrition & Hydration</h2>
+
+    <!-- Water Tracker -->
+    <div class="card">
+        <h3 class="card-title">Water Tracker</h3>
+        <p class="card-subtitle">Tap a glass to fill it. Goal: <strong>8 glasses</strong> per day.</p>
+        <div class="water-glasses" id="water-glasses">
+            <button class="glass-icon" data-index="0" aria-label="Glass 1">🫙</button>
+            <button class="glass-icon" data-index="1" aria-label="Glass 2">🫙</button>
+            <button class="glass-icon" data-index="2" aria-label="Glass 3">🫙</button>
+            <button class="glass-icon" data-index="3" aria-label="Glass 4">🫙</button>
+            <button class="glass-icon" data-index="4" aria-label="Glass 5">🫙</button>
+            <button class="glass-icon" data-index="5" aria-label="Glass 6">🫙</button>
+            <button class="glass-icon" data-index="6" aria-label="Glass 7">🫙</button>
+            <button class="glass-icon" data-index="7" aria-label="Glass 8">🫙</button>
+        </div>
+        <p class="water-count" id="water-count-text">0 / 8 glasses today</p>
+        <button class="btn btn-secondary btn-small" id="water-reset">Reset Today</button>
+    </div>
+
+    <!-- Meal Logger -->
+    <div class="card">
+        <h3 class="card-title">Log a Meal</h3>
+        <div class="form-group">
+            <label for="meal-type">Meal Type</label>
+            <select id="meal-type">
+                <option value="breakfast">🌅 Breakfast</option>
+                <option value="lunch">☀️ Lunch</option>
+                <option value="dinner">🌙 Dinner</option>
+                <option value="snack">🍿 Snack</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="meal-description">What did you eat?</label>
+            <input type="text" id="meal-description" placeholder="e.g., Salad with grilled chicken" maxlength="100">
+        </div>
+        <div class="form-group">
+            <label>Healthiness Rating</label>
+            <div class="rating-picker" id="meal-rating-picker">
+                <button class="rating-btn" data-rating="1" aria-label="Unhealthy">😞</button>
+                <button class="rating-btn" data-rating="2" aria-label="Not great">😕</button>
+                <button class="rating-btn" data-rating="3" aria-label="Okay">😐</button>
+                <button class="rating-btn" data-rating="4" aria-label="Healthy">😊</button>
+                <button class="rating-btn" data-rating="5" aria-label="Very healthy">🥗</button>
+            </div>
+            <input type="hidden" id="meal-rating" value="3">
+        </div>
+        <button class="btn btn-primary btn-full" id="meal-save">Log Meal</button>
+        <div id="meal-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <!-- Today's Meals -->
+    <div class="card">
+        <h3 class="card-title">Today's Meals</h3>
+        <ul id="meal-list" class="log-list">
+            <li class="log-empty">No meals logged yet today.</li>
+        </ul>
+    </div>
+
+    <!-- Nutrition Tips -->
+    <div class="card">
+        <h3 class="card-title">Healthy Eating Tips</h3>
+        <div class="tips-accordion">
+            <details class="tip-item">
+                <summary>🥦 Eat the rainbow</summary>
+                <p>Different colored fruits and vegetables provide different nutrients. Aim for variety!</p>
+            </details>
+            <details class="tip-item">
+                <summary>💧 Stay hydrated</summary>
+                <p>Drink water throughout the day. Thirst is often mistaken for hunger.</p>
+            </details>
+            <details class="tip-item">
+                <summary>🍳 Don't skip breakfast</summary>
+                <p>A balanced breakfast fuels your brain for morning classes and study sessions.</p>
+            </details>
+            <details class="tip-item">
+                <summary>🥜 Smart snacking</summary>
+                <p>Choose nuts, fruits, or yogurt over processed snacks for sustained energy.</p>
+            </details>
+            <details class="tip-item">
+                <summary>🍽️ Mindful eating</summary>
+                <p>Eat without screens when possible. Pay attention to hunger and fullness cues.</p>
+            </details>
+            <details class="tip-item">
+                <summary>☕ Watch the caffeine</summary>
+                <p>Limit caffeine after 2pm — it can disrupt sleep even hours later.</p>
+            </details>
+        </div>
+    </div>
+</section>
+{% endblock %}

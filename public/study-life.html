@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="description" content="Wellbeing-Companion — Your all-in-one student health and wellbeing tracker.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <title>Study-Life Balance — Wellbeing-Companion</title>
+</head>
+<body data-page="study">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Top header bar -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="logo-icon">🌱</span>
+            <h1 class="app-title">Wellness</h1>
+        </div>
+        <div class="header-right">
+            <span id="current-date" class="current-date"></span>
+            <!-- Auth area: sign-in button or user menu -->
+            <span id="auth-area">
+                <button id="auth-signin-btn" class="auth-btn" aria-label="Sign in with Microsoft">
+                    <span class="auth-icon">🔐</span> Sign in
+                </button>
+            </span>
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main id="main-content">
+        
+<section class="page-section">
+    <h2 class="section-title">📚 Study-Life Balance</h2>
+
+    <!-- Pomodoro Timer -->
+    <div class="card">
+        <h3 class="card-title">Pomodoro Timer</h3>
+        <p class="card-subtitle">25 minutes focus · 5 minutes break</p>
+        <div class="pomodoro-container">
+            <div class="pomodoro-ring" id="pomodoro-ring">
+                <svg viewBox="0 0 200 200" class="pomodoro-svg">
+                    <circle class="pomodoro-bg" cx="100" cy="100" r="90"/>
+                    <circle class="pomodoro-fill" cx="100" cy="100" r="90" id="pomodoro-circle"/>
+                </svg>
+                <div class="pomodoro-display">
+                    <span class="pomodoro-time" id="pomodoro-time">25:00</span>
+                    <span class="pomodoro-session" id="pomodoro-session-label">Focus Session</span>
+                </div>
+            </div>
+            <div class="pomodoro-controls">
+                <button class="btn btn-primary" id="pomodoro-play" aria-label="Start timer">
+                    ▶ Start
+                </button>
+                <button class="btn btn-secondary" id="pomodoro-pause" style="display:none;" aria-label="Pause timer">
+                    ⏸ Pause
+                </button>
+                <button class="btn btn-outline" id="pomodoro-reset" aria-label="Reset timer">
+                    ↺ Reset
+                </button>
+            </div>
+            <div class="pomodoro-stats">
+                <span>Sessions completed today: <strong id="pomodoro-count">0</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Break Reminder Modal (hidden by default) -->
+    <div class="modal-overlay" id="break-modal" style="display:none;">
+        <div class="modal-card">
+            <span class="modal-emoji">☕</span>
+            <h3>Time for a longer break!</h3>
+            <p>You've completed 2 focus sessions. Take a 15-minute break to recharge.</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="break-acknowledge">Got it, thanks!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Session Logger -->
+    <div class="card">
+        <h3 class="card-title">Log Study Time</h3>
+        <div class="form-group">
+            <label for="study-subject">Subject</label>
+            <input type="text" id="study-subject" placeholder="e.g., Math, History, Programming" maxlength="50">
+        </div>
+        <div class="form-group">
+            <label for="study-minutes">Minutes Studied</label>
+            <input type="number" id="study-minutes" min="1" max="600" value="25" placeholder="Minutes">
+        </div>
+        <button class="btn btn-primary btn-full" id="study-save">Log Study Session</button>
+        <div id="study-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <!-- Today's Study Summary -->
+    <div class="card">
+        <h3 class="card-title">Today's Study Time</h3>
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill study-fill" id="study-bar" style="width:0%;"></div>
+            </div>
+            <p class="progress-text" id="study-progress-text">0 / 120 minutes goal</p>
+        </div>
+        <div class="study-log">
+            <h4>Today's Sessions</h4>
+            <ul id="study-list" class="log-list"></ul>
+        </div>
+    </div>
+
+    <!-- Focus Tips -->
+    <div class="card">
+        <h3 class="card-title">Focus Tips</h3>
+        <div class="tips-accordion">
+            <details class="tip-item">
+                <summary>🎯 The 2-minute rule</summary>
+                <p>If a task takes less than 2 minutes, do it now. Don't let small tasks pile up.</p>
+            </details>
+            <details class="tip-item">
+                <summary>📵 Phone away</summary>
+                <p>Put your phone in another room or use focus mode. Out of sight, out of mind.</p>
+            </details>
+            <details class="tip-item">
+                <summary>⏰ Study in blocks</summary>
+                <p>Use the Pomodoro technique: 25 minutes of focus, then a 5-minute break.</p>
+            </details>
+            <details class="tip-item">
+                <summary>🎵 Background sounds</summary>
+                <p>Instrumental music or white noise can improve focus. Avoid lyrics while studying.</p>
+            </details>
+            <details class="tip-item">
+                <summary>📝 Active recall</summary>
+                <p>Test yourself instead of re-reading. Active recall is one of the most effective study methods.</p>
+            </details>
+            <details class="tip-item">
+                <summary>😴 Sleep matters</summary>
+                <p>Sleep is when your brain consolidates memories. Pulling an all-nighter hurts more than it helps.</p>
+            </details>
+        </div>
+    </div>
+</section>
+
+    </main>
+
+    <!-- Bottom navigation bar (mobile-friendly) -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item " aria-label="Dashboard">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="/mental-health" class="nav-item " aria-label="Mental Health">
+            <span class="nav-icon">🧠</span>
+            <span class="nav-label">Mind</span>
+        </a>
+        <a href="/physical-health" class="nav-item " aria-label="Physical Health">
+            <span class="nav-icon">💪</span>
+            <span class="nav-label">Body</span>
+        </a>
+        <a href="/nutrition" class="nav-item " aria-label="Nutrition">
+            <span class="nav-icon">🥗</span>
+            <span class="nav-label">Food</span>
+        </a>
+        <a href="/study-life" class="nav-item active" aria-label="Study-Life Balance">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">Study</span>
+        </a>
+    </nav>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts (order matters) -->
+    <script src="/static/firebase-config.js"></script>
+    <script src="/static/storage.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/app.js"></script>
+
+    <!-- Wire up auth → storage cloud sync -->
+    <script>
+        (function() {
+            if (typeof Auth === 'undefined' || typeof Storage === 'undefined') return;
+
+            Auth.onAuthStateChanged(function(user) {
+                var authArea = document.getElementById('auth-area');
+                if (!authArea) return;
+
+                if (user) {
+                    // Enable cloud sync and load data from Firestore
+                    Storage.enableCloud(user.uid);
+                    Storage.loadFromCloud(function() {
+                        // Re-render current page after cloud data merge
+                        var pageName = document.body.dataset.page;
+                        if (pageName && page[pageName] && typeof page[pageName].init === 'function') {
+                            page[pageName].init();
+                        }
+                    });
+
+                    var firstName = (user.displayName || '').split(' ')[0] || user.email || 'User';
+                    var initial = firstName.charAt(0).toUpperCase();
+                    var avatarHtml = user.photoURL
+                        ? '<img class="user-avatar" src="' + user.photoURL + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+                          '<span class="user-fallback" style="display:none;">' + initial + '</span>'
+                        : '<span class="user-fallback">' + initial + '</span>';
+
+                    authArea.innerHTML =
+                        '<div class="auth-menu">' +
+                            '<button class="auth-user-btn" id="auth-user-btn" aria-label="User menu">' +
+                                avatarHtml +
+                                '<span class="user-name">' + firstName + '</span>' +
+                            '</button>' +
+                            '<div class="auth-dropdown" id="auth-dropdown" style="display:none;">' +
+                                '<div class="dropdown-user-info">' +
+                                    '<span class="dropdown-name">' + (user.displayName || 'User') + '</span>' +
+                                    '<span class="dropdown-email">' + (user.email || '') + '</span>' +
+                                '</div>' +
+                                '<button class="dropdown-signout" id="dropdown-signout">Sign out</button>' +
+                            '</div>' +
+                        '</div>';
+
+                    document.getElementById('auth-user-btn').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var dd = document.getElementById('auth-dropdown');
+                        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+                    });
+
+                    document.addEventListener('click', function() {
+                        var dd = document.getElementById('auth-dropdown');
+                        if (dd) dd.style.display = 'none';
+                    });
+
+                    document.getElementById('dropdown-signout').addEventListener('click', function() {
+                        Auth.signOut().then(function() {
+                            Storage.disableCloud();
+                            location.reload();
+                        });
+                    });
+
+                } else {
+                    Storage.disableCloud();
+                    authArea.innerHTML =
+                        '<a href="/auth" class="auth-btn" aria-label="Sign in">' +
+                            '<span class="auth-icon">🔐</span> Sign in' +
+                        '</a>';
+                }
+            });
+        })();
+    </script>
+
+    <!-- Register service worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.log('Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

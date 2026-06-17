@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="description" content="Wellbeing-Companion — Your all-in-one student health and wellbeing tracker.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <title>Sign In — Wellbeing-Companion</title>
+</head>
+<body data-page="auth">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Top header bar -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="logo-icon">🌱</span>
+            <h1 class="app-title">Wellness</h1>
+        </div>
+        <div class="header-right">
+            <span id="current-date" class="current-date"></span>
+            <!-- Auth area: sign-in button or user menu -->
+            <span id="auth-area">
+                <button id="auth-signin-btn" class="auth-btn" aria-label="Sign in with Microsoft">
+                    <span class="auth-icon">🔐</span> Sign in
+                </button>
+            </span>
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main id="main-content">
+        
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Brand -->
+        <div class="auth-brand">
+            <span class="auth-logo">🌱</span>
+            <h1 class="auth-app-name">Wellbeing Companion</h1>
+        </div>
+
+        <!-- Social sign-in buttons (primary, prominent) -->
+        <div class="auth-social-stack">
+            <button class="auth-social-btn google" id="auth-google" aria-label="Sign in with Google">
+                <svg class="social-svg" width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span>Continue with Google</span>
+            </button>
+
+            <button class="auth-social-btn microsoft" id="auth-microsoft" aria-label="Sign in with Microsoft">
+                <svg class="social-svg" width="20" height="20" viewBox="0 0 21 21">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                </svg>
+                <span>Continue with Microsoft</span>
+            </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>or sign in with email</span>
+        </div>
+
+        <!-- Email / Password form -->
+        <form class="auth-email-form" id="auth-form" novalidate>
+            <div class="auth-field" id="auth-name-field" style="display:none;">
+                <input type="text" id="auth-name" name="name"
+                       placeholder="Full name" autocomplete="name">
+            </div>
+            <div class="auth-field">
+                <input type="email" id="auth-email" name="email"
+                       placeholder="Email address" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+                <input type="password" id="auth-password" name="password"
+                       placeholder="Password" required
+                       minlength="6" autocomplete="current-password">
+            </div>
+            <div class="auth-error" id="auth-error" style="display:none;"></div>
+            <button type="submit" class="auth-submit-btn" id="auth-submit-btn">
+                <span id="auth-submit-label">Sign in</span>
+            </button>
+        </form>
+
+        <!-- Toggle between sign-in and sign-up -->
+        <p class="auth-switch" id="auth-switch">
+            Don't have an account? <button type="button" class="auth-switch-btn" id="auth-switch-btn">Create one</button>
+        </p>
+    </div>
+</div>
+
+<script>
+(function() {
+    var isSignUp = false;
+    var nameField = document.getElementById('auth-name-field');
+    var submitLabel = document.getElementById('auth-submit-label');
+    var switchText = document.getElementById('auth-switch');
+    var switchBtn = document.getElementById('auth-switch-btn');
+    var errorEl = document.getElementById('auth-error');
+    var submitBtn = document.getElementById('auth-submit-btn');
+    var emailInput = document.getElementById('auth-email');
+    var nameInput = document.getElementById('auth-name');
+    var passwordInput = document.getElementById('auth-password');
+
+    function setMode(signUp) {
+        isSignUp = signUp;
+        nameField.style.display = signUp ? 'block' : 'none';
+        submitLabel.textContent = signUp ? 'Create account' : 'Sign in';
+        switchText.innerHTML = signUp
+            ? 'Already have an account? <button type="button" class="auth-switch-btn" id="auth-switch-btn">Sign in</button>'
+            : 'Don\'t have an account? <button type="button" class="auth-switch-btn" id="auth-switch-btn">Create one</button>';
+        // Re-bind the new button
+        document.getElementById('auth-switch-btn').addEventListener('click', function() {
+            setMode(!isSignUp);
+        });
+        hideError();
+    }
+
+    // Initial binding
+    switchBtn.addEventListener('click', function() { setMode(true); });
+
+    function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+        errorEl.style.animation = 'none';
+        errorEl.offsetHeight; // trigger reflow
+        errorEl.style.animation = 'fadeIn 0.25s ease';
+    }
+
+    function hideError() {
+        errorEl.style.display = 'none';
+    }
+
+    // Submit handler
+    document.getElementById('auth-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        hideError();
+
+        var email = emailInput.value.trim();
+        var password = passwordInput.value;
+
+        if (!email || !password) {
+            showError('Please enter your email and password.');
+            return;
+        }
+        if (password.length < 6) {
+            showError('Password must be at least 6 characters.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitLabel.textContent = isSignUp ? 'Creating account…' : 'Signing in…';
+
+        var promise;
+        if (isSignUp) {
+            var name = nameInput.value.trim();
+            promise = Auth.signUpWithEmail(email, password).then(function() {
+                if (name && firebase.auth().currentUser) {
+                    return firebase.auth().currentUser.updateProfile({ displayName: name });
+                }
+            });
+        } else {
+            promise = Auth.signInWithEmail(email, password);
+        }
+
+        promise.then(function() {
+            window.location.href = '/';
+        }).catch(function(err) {
+            submitBtn.disabled = false;
+            submitLabel.textContent = isSignUp ? 'Create account' : 'Sign in';
+
+            var msg = err.message;
+            if (err.code === 'auth/email-already-in-use') {
+                msg = 'An account with this email already exists. Sign in instead.';
+            } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                msg = 'Invalid email or password.';
+            } else if (err.code === 'auth/invalid-email') {
+                msg = 'Please enter a valid email address.';
+            } else if (err.code === 'auth/weak-password') {
+                msg = 'Password is too weak — use at least 6 characters.';
+            }
+            showError(msg);
+        });
+    });
+
+    function handleSocialError(err, providerName, btn) {
+        // If we're signed in despite the error, just go home
+        if (Auth.isSignedIn()) {
+            window.location.href = '/';
+            return;
+        }
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        // Only show error for real failures (not popup/redirect flows)
+        var benign = ['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+        if (benign.indexOf(err.code) === -1) {
+            showError(providerName + ' error: ' + (err.code || err.message));
+        }
+    }
+
+    // Google
+    document.getElementById('auth-google').addEventListener('click', function() {
+        hideError();
+        var btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        Auth.signInWithGoogle().then(function() {
+            window.location.href = '/';
+        }).catch(function(err) {
+            handleSocialError(err, 'Google', btn);
+        });
+    });
+
+    // Microsoft
+    document.getElementById('auth-microsoft').addEventListener('click', function() {
+        hideError();
+        var btn = this;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        Auth.signInWithMicrosoft().then(function() {
+            window.location.href = '/';
+        }).catch(function(err) {
+            handleSocialError(err, 'Microsoft', btn);
+        });
+    });
+
+    // Redirect if already signed in
+    Auth.onAuthStateChanged(function(user) {
+        if (user) window.location.href = '/';
+    });
+})();
+</script>
+
+    </main>
+
+    <!-- Bottom navigation bar (mobile-friendly) -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item " aria-label="Dashboard">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="/mental-health" class="nav-item " aria-label="Mental Health">
+            <span class="nav-icon">🧠</span>
+            <span class="nav-label">Mind</span>
+        </a>
+        <a href="/physical-health" class="nav-item " aria-label="Physical Health">
+            <span class="nav-icon">💪</span>
+            <span class="nav-label">Body</span>
+        </a>
+        <a href="/nutrition" class="nav-item " aria-label="Nutrition">
+            <span class="nav-icon">🥗</span>
+            <span class="nav-label">Food</span>
+        </a>
+        <a href="/study-life" class="nav-item " aria-label="Study-Life Balance">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">Study</span>
+        </a>
+    </nav>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts (order matters) -->
+    <script src="/static/firebase-config.js"></script>
+    <script src="/static/storage.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/app.js"></script>
+
+    <!-- Wire up auth → storage cloud sync -->
+    <script>
+        (function() {
+            if (typeof Auth === 'undefined' || typeof Storage === 'undefined') return;
+
+            Auth.onAuthStateChanged(function(user) {
+                var authArea = document.getElementById('auth-area');
+                if (!authArea) return;
+
+                if (user) {
+                    // Enable cloud sync and load data from Firestore
+                    Storage.enableCloud(user.uid);
+                    Storage.loadFromCloud(function() {
+                        // Re-render current page after cloud data merge
+                        var pageName = document.body.dataset.page;
+                        if (pageName && page[pageName] && typeof page[pageName].init === 'function') {
+                            page[pageName].init();
+                        }
+                    });
+
+                    var firstName = (user.displayName || '').split(' ')[0] || user.email || 'User';
+                    var initial = firstName.charAt(0).toUpperCase();
+                    var avatarHtml = user.photoURL
+                        ? '<img class="user-avatar" src="' + user.photoURL + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+                          '<span class="user-fallback" style="display:none;">' + initial + '</span>'
+                        : '<span class="user-fallback">' + initial + '</span>';
+
+                    authArea.innerHTML =
+                        '<div class="auth-menu">' +
+                            '<button class="auth-user-btn" id="auth-user-btn" aria-label="User menu">' +
+                                avatarHtml +
+                                '<span class="user-name">' + firstName + '</span>' +
+                            '</button>' +
+                            '<div class="auth-dropdown" id="auth-dropdown" style="display:none;">' +
+                                '<div class="dropdown-user-info">' +
+                                    '<span class="dropdown-name">' + (user.displayName || 'User') + '</span>' +
+                                    '<span class="dropdown-email">' + (user.email || '') + '</span>' +
+                                '</div>' +
+                                '<button class="dropdown-signout" id="dropdown-signout">Sign out</button>' +
+                            '</div>' +
+                        '</div>';
+
+                    document.getElementById('auth-user-btn').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var dd = document.getElementById('auth-dropdown');
+                        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+                    });
+
+                    document.addEventListener('click', function() {
+                        var dd = document.getElementById('auth-dropdown');
+                        if (dd) dd.style.display = 'none';
+                    });
+
+                    document.getElementById('dropdown-signout').addEventListener('click', function() {
+                        Auth.signOut().then(function() {
+                            Storage.disableCloud();
+                            location.reload();
+                        });
+                    });
+
+                } else {
+                    Storage.disableCloud();
+                    authArea.innerHTML =
+                        '<a href="/auth" class="auth-btn" aria-label="Sign in">' +
+                            '<span class="auth-icon">🔐</span> Sign in' +
+                        '</a>';
+                }
+            });
+        })();
+    </script>
+
+    <!-- Register service worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.log('Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

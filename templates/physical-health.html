@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set page_id = "physical" %}
+{% block title %}Physical Health — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">💪 Physical Health</h2>
+
+    <!-- Activity Logger -->
+    <div class="card">
+        <h3 class="card-title">Log Activity</h3>
+        <div class="form-group">
+            <label for="activity-type">Activity Type</label>
+            <select id="activity-type">
+                <option value="walk">🚶 Walk</option>
+                <option value="run">🏃 Run</option>
+                <option value="gym">🏋️ Gym</option>
+                <option value="sport">⚽ Sport</option>
+                <option value="yoga">🧘 Yoga</option>
+                <option value="swim">🏊 Swim</option>
+                <option value="dance">💃 Dance</option>
+                <option value="other">💪 Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="activity-minutes">Minutes</label>
+            <input type="number" id="activity-minutes" min="1" max="300" value="30" placeholder="Minutes of activity">
+        </div>
+        <button class="btn btn-primary btn-full" id="activity-save">Log Activity</button>
+        <div id="activity-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <!-- Today's Activity Summary -->
+    <div class="card">
+        <h3 class="card-title">Today's Progress</h3>
+        <div class="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill activity-fill" id="activity-bar" style="width:0%;"></div>
+            </div>
+            <p class="progress-text" id="activity-progress-text">0 / 30 minutes goal</p>
+        </div>
+        <div class="activity-log" id="activity-log">
+            <h4>Today's Activities</h4>
+            <ul id="activity-list" class="log-list"></ul>
+        </div>
+    </div>
+
+    <!-- Stretch Break Reminder -->
+    <div class="card">
+        <h3 class="card-title">Stretch Break</h3>
+        <p class="card-subtitle">Studying for hours? Take a 5-minute stretch break.</p>
+        <div class="stretch-timer-container">
+            <div class="stretch-timer-display" id="stretch-timer-display">05:00</div>
+            <div class="stretch-state" id="stretch-state">Ready to stretch?</div>
+        </div>
+        <div class="stretch-actions">
+            <button class="btn btn-primary" id="stretch-start">Start Break</button>
+            <button class="btn btn-secondary" id="stretch-reset">Reset</button>
+        </div>
+        <div class="stretch-exercises" id="stretch-exercises">
+            <h4>Quick Stretches</h4>
+            <div class="stretch-grid">
+                <div class="stretch-item">
+                    <span class="stretch-emoji">🙆</span>
+                    <p>Neck rolls — 30 seconds</p>
+                </div>
+                <div class="stretch-item">
+                    <span class="stretch-emoji">🤸</span>
+                    <p>Shoulder shrugs — 30 seconds</p>
+                </div>
+                <div class="stretch-item">
+                    <span class="stretch-emoji">🧘</span>
+                    <p>Forward fold — 1 minute</p>
+                </div>
+                <div class="stretch-item">
+                    <span class="stretch-emoji">💃</span>
+                    <p>Wrist circles — 30 seconds</p>
+                </div>
+                <div class="stretch-item">
+                    <span class="stretch-emoji">🦵</span>
+                    <p>Leg stretches — 1 minute</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

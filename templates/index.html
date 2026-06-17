@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% set page_id = "dashboard" %}
+{% block title %}Dashboard — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">Your Wellness at a Glance</h2>
+
+    <!-- Wellness Score Ring -->
+    <div class="card wellness-score-card">
+        <div class="score-ring-container">
+            <div class="score-ring" id="wellness-ring">
+                <svg viewBox="0 0 120 120" class="ring-svg">
+                    <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                    <circle class="ring-fill" cx="60" cy="60" r="52" id="ring-circle"/>
+                </svg>
+                <div class="score-value" id="wellness-score">--</div>
+            </div>
+            <p class="score-label">Wellness Score</p>
+        </div>
+    </div>
+
+    <!-- Streak Cards -->
+    <div class="grid" id="streak-grid">
+        <div class="card streak-card">
+            <div class="streak-icon">😊</div>
+            <div class="streak-count" id="streak-mood">0</div>
+            <div class="streak-label">Mood Check-ins</div>
+        </div>
+        <div class="card streak-card">
+            <div class="streak-icon">💧</div>
+            <div class="streak-count" id="streak-water">0</div>
+            <div class="streak-label">Water Tracking</div>
+        </div>
+        <div class="card streak-card">
+            <div class="streak-icon">🏃</div>
+            <div class="streak-count" id="streak-activity">0</div>
+            <div class="streak-label">Activity Days</div>
+        </div>
+        <div class="card streak-card">
+            <div class="streak-icon">📖</div>
+            <div class="streak-count" id="streak-study">0</div>
+            <div class="streak-label">Study Sessions</div>
+        </div>
+    </div>
+
+    <!-- Quick Add Buttons -->
+    <h3 class="section-subtitle">Quick Log</h3>
+    <div class="quick-actions">
+        <button class="btn btn-primary quick-btn" id="quick-mood" aria-label="Log mood">
+            <span class="quick-icon">😊</span> Log Mood
+        </button>
+        <button class="btn btn-primary quick-btn" id="quick-water" aria-label="Add water">
+            <span class="quick-icon">💧</span> Add Water
+        </button>
+        <button class="btn btn-primary quick-btn" id="quick-activity" aria-label="Log activity">
+            <span class="quick-icon">🏃</span> Log Activity
+        </button>
+    </div>
+
+    <!-- Quick-add inline forms (hidden by default) -->
+    <div class="card quick-form" id="quick-mood-form" style="display:none;">
+        <h4>How are you feeling?</h4>
+        <div class="mood-emoji-picker" id="quick-mood-picker">
+            <button class="mood-btn" data-mood="1" aria-label="Very bad">😢</button>
+            <button class="mood-btn" data-mood="2" aria-label="Bad">😟</button>
+            <button class="mood-btn" data-mood="3" aria-label="Okay">😐</button>
+            <button class="mood-btn" data-mood="4" aria-label="Good">😊</button>
+            <button class="mood-btn" data-mood="5" aria-label="Great">🤩</button>
+        </div>
+    </div>
+
+    <div class="card quick-form" id="quick-water-form" style="display:none;">
+        <h4>Add Water Glasses</h4>
+        <div class="water-quick-add">
+            <button class="btn btn-small water-minus">−</button>
+            <span class="water-count-display" id="quick-water-count">1</span>
+            <button class="btn btn-small water-plus">+</button>
+        </div>
+        <button class="btn btn-primary btn-full" id="quick-water-save">Save</button>
+    </div>
+
+    <div class="card quick-form" id="quick-activity-form" style="display:none;">
+        <h4>Log Activity</h4>
+        <div class="form-group">
+            <label for="quick-activity-type">Type</label>
+            <select id="quick-activity-type">
+                <option value="walk">🚶 Walk</option>
+                <option value="run">🏃 Run</option>
+                <option value="gym">🏋️ Gym</option>
+                <option value="sport">⚽ Sport</option>
+                <option value="yoga">🧘 Yoga</option>
+                <option value="other">💪 Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="quick-activity-minutes">Minutes</label>
+            <input type="number" id="quick-activity-minutes" min="1" max="300" value="30">
+        </div>
+        <button class="btn btn-primary btn-full" id="quick-activity-save">Save</button>
+    </div>
+</section>
+{% endblock %}
