@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/analyze.py": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
