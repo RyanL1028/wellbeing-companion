@@ -2,10 +2,46 @@
 Wellbeing-Companion — Flask App
 A responsive web app for student health and wellbeing (SDG 3).
 All user data stays in the browser via localStorage.
+AI image analysis via DeepSeek Vision API.
 """
-from flask import Flask, render_template, send_from_directory
+import os
+import base64
+import json
+from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask_cors import CORS
+from openai import OpenAI
 
 app = Flask(__name__)
+CORS(app)
+
+# DeepSeek API client (OpenAI-compatible)
+deepseek = OpenAI(
+    api_key=os.environ.get("DEEPSEEK_API_KEY", ""),
+    base_url="https://api.deepseek.com"
+)
+
+# ---- Prompts for each analysis type ----
+
+PROMPTS = {
+    "food": (
+        "Analyze this food photo and estimate its nutritional content. "
+        "Return ONLY valid JSON (no markdown, no extra text) in this exact format:\n"
+        '{"name":"...","calories":000,"protein_g":00,"carbs_g":00,"fat_g":00,"healthScore":0,"description":"..."}\n'
+        "healthScore is 1-5 (1=unhealthy, 5=very healthy). Be realistic with estimates."
+    ),
+    "water": (
+        "Look at this photo and count how many cups/glasses/bottles of water are visible. "
+        "Return ONLY valid JSON (no markdown, no extra text) in this exact format:\n"
+        '{"cupsCount":0,"totalMl":000,"description":"..."}\n'
+        "Estimate 250ml per standard cup. Count ALL drinking vessels containing clear liquid."
+    ),
+    "study": (
+        "Look at this photo and determine if the person is in a study/work environment. "
+        "Return ONLY valid JSON (no markdown, no extra text) in this exact format:\n"
+        '{"studying":true,"confidence":0.0,"description":"...","suggestions":["..."]}\n'
+        "confidence is 0.0-1.0. If studying, provide 1-2 brief tips. If not, describe what you see."
+    ),
+}
 
 
 @app.route('/')
@@ -49,6 +85,60 @@ def service_worker():
     """Service worker must be served from root per PWA spec."""
     return send_from_directory('static', 'sw.js',
                                mimetype='application/javascript')
+
+
+@app.route('/api/analyze', methods=['POST'])
+def analyze_image():
+    """Analyze an image using DeepSeek Vision API.
+    Accepts JSON: { image: "<base64>", type: "food"|"water"|"study" }
+    Returns structured analysis as JSON.
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    image_b64 = data.get("image", "")
+    analysis_type = data.get("type", "")
+
+    if not image_b64 or analysis_type not in PROMPTS:
+        return jsonify({"error": "Missing image or invalid type"}), 400
+
+    # Strip data URI prefix if present
+    if "," in image_b64:
+        image_b64 = image_b64.split(",", 1)[1]
+
+    try:
+        response = deepseek.chat.completions.create(
+            model="deepseek-chat",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": PROMPTS[analysis_type]},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}}
+                ]
+            }],
+            max_tokens=500,
+            temperature=0.1
+        )
+
+        raw = response.choices[0].message.content.strip()
+
+        # Parse the JSON from the response (handle markdown code blocks)
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+            raw = raw.strip()
+            if raw.startswith("json"):
+                raw = raw[4:].strip()
+
+        result = json.loads(raw)
+        return jsonify(result)
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to parse AI response", "raw": raw}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

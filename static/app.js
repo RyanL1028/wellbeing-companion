@@ -47,6 +47,86 @@ var Util = {
 };
 
 
+// ---- AI Image Capture ----
+
+var AiCapture = {
+    /** API URL — points to local Flask in dev, Render in production */
+    API_URL: (function() {
+        if (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG.apiUrl) {
+            return FIREBASE_CONFIG.apiUrl + '/api/analyze';
+        }
+        return '/api/analyze'; // local dev fallback
+    })(),
+
+    /**
+     * Open camera or file picker, compress image, return base64 string.
+     * @param {Function} callback - receives (base64String) or null on cancel
+     */
+    capture: function(callback) {
+        // Create hidden file input
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment'; // rear camera on mobile
+
+        input.addEventListener('change', function() {
+            var file = input.files[0];
+            if (!file) { callback(null); return; }
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                AiCapture._compress(e.target.result, 1024, function(compressed) {
+                    callback(compressed);
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        input.click();
+    },
+
+    /** Compress image to maxDimension px wide/tall, returns base64 data URI */
+    _compress: function(dataUri, maxDim, callback) {
+        var img = new Image();
+        img.onload = function() {
+            var w = img.width, h = img.height;
+            if (w <= maxDim && h <= maxDim) {
+                callback(dataUri);
+                return;
+            }
+            var ratio = Math.min(maxDim / w, maxDim / h);
+            var cw = Math.round(w * ratio), ch = Math.round(h * ratio);
+            var canvas = document.createElement('canvas');
+            canvas.width = cw;
+            canvas.height = ch;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, cw, ch);
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = dataUri;
+    },
+
+    /**
+     * Send image to the AI backend for analysis.
+     * @param {string} imageBase64 - data URI or raw base64
+     * @param {string} type - 'food' | 'water' | 'study'
+     * @returns {Promise<Object>} parsed analysis result
+     */
+    analyze: function(imageBase64, type) {
+        return fetch(this.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageBase64, type: type })
+        }).then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) { throw new Error(e.error || 'Analysis failed'); });
+            }
+            return r.json();
+        });
+    }
+};
+
+
 // ---- Page Namespace ----
 
 var page = {
@@ -426,6 +506,7 @@ var page = {
             this.initActivityLogger();
             this.renderActivitySummary();
             this.initStretchTimer();
+            this.initAiWater();
         },
 
         initActivityLogger: function() {
@@ -533,6 +614,83 @@ var page = {
                 display.textContent = '05:00';
                 stateEl.textContent = 'Ready to stretch?';
             });
+        },
+
+        // ---- AI Water Tracking ----
+        initAiWater: function() {
+            var beforeBtn = document.getElementById('ai-water-before');
+            var afterBtn = document.getElementById('ai-water-after');
+            if (!beforeBtn || !afterBtn) return;
+
+            var beforeB64 = null;
+            var beforePreview = document.getElementById('ai-water-before-preview');
+            var afterPreview = document.getElementById('ai-water-after-preview');
+            var result = document.getElementById('ai-water-result');
+            var spinner = document.getElementById('ai-water-spinner');
+
+            beforeBtn.addEventListener('click', function() {
+                AiCapture.capture(function(b64) {
+                    if (!b64) return;
+                    beforeB64 = b64;
+                    beforePreview.innerHTML = '<img src="' + b64 + '" alt="Before"><span class="ai-preview-label">Before</span>';
+                    beforePreview.style.display = 'inline-block';
+                    result.style.display = 'none';
+                });
+            });
+
+            afterBtn.addEventListener('click', function() {
+                if (!beforeB64) {
+                    result.innerHTML = '<p class="ai-error">⚠️ Take a "before" photo first.</p>';
+                    result.style.display = 'block';
+                    return;
+                }
+                AiCapture.capture(function(b64) {
+                    if (!b64) return;
+                    afterPreview.innerHTML = '<img src="' + b64 + '" alt="After"><span class="ai-preview-label">After</span>';
+                    afterPreview.style.display = 'inline-block';
+                    spinner.style.display = 'block';
+                    result.style.display = 'none';
+                    beforeBtn.disabled = afterBtn.disabled = true;
+
+                    AiCapture.analyze(b64, 'water').then(function(afterData) {
+                        // Also analyze the before image to get a baseline
+                        return AiCapture.analyze(beforeB64, 'water').then(function(beforeData) {
+                            spinner.style.display = 'none';
+                            var beforeCups = beforeData.cupsCount || 0;
+                            var afterCups = afterData.cupsCount || 0;
+                            var drank = Math.max(0, afterCups - beforeCups);
+
+                            result.innerHTML =
+                                '<div class="ai-result-card">' +
+                                    '<h4>💧 Water Analysis</h4>' +
+                                    '<div class="ai-water-compare">' +
+                                        '<div><strong>Before:</strong> ' + beforeCups + ' cups</div>' +
+                                        '<div><strong>After:</strong> ' + afterCups + ' cups</div>' +
+                                    '</div>' +
+                                    '<p class="ai-water-drank">You drank ~<strong>' + drank + '</strong> cups (~' + (drank * 250) + 'ml)</p>' +
+                                    '<button class="btn btn-primary btn-small ai-log-water">Log ' + drank + ' cups</button>' +
+                                '</div>';
+                            result.style.display = 'block';
+                            beforeBtn.disabled = afterBtn.disabled = false;
+
+                            result.querySelector('.ai-log-water').addEventListener('click', function() {
+                                for (var i = 0; i < drank; i++) {
+                                    Storage.fillWaterGlass();
+                                }
+                                if (typeof page.nutrition !== 'undefined' && page.nutrition.renderWaterGlasses) {
+                                    page.nutrition.renderWaterGlasses();
+                                }
+                                Util.showFeedback(document.getElementById('activity-feedback'), drank + ' cups logged! 💧', 'success');
+                            });
+                        });
+                    }).catch(function(err) {
+                        spinner.style.display = 'none';
+                        result.innerHTML = '<p class="ai-error">❌ ' + err.message + '</p>';
+                        result.style.display = 'block';
+                        beforeBtn.disabled = afterBtn.disabled = false;
+                    });
+                });
+            });
         }
     },
 
@@ -551,6 +709,7 @@ var page = {
             this.initRatingPicker();
             this.initMealLogger();
             this.renderMeals();
+            this.initAiFood();
         },
 
         renderWaterGlasses: function() {
@@ -675,6 +834,62 @@ var page = {
                     '</li>';
             });
             list.innerHTML = html;
+        },
+
+        // ---- AI Food Analysis ----
+        initAiFood: function() {
+            var self = this;
+            var btn = document.getElementById('ai-food-btn');
+            if (!btn) return;
+
+            btn.addEventListener('click', function() {
+                var preview = document.getElementById('ai-food-preview');
+                var result = document.getElementById('ai-food-result');
+                var spinner = document.getElementById('ai-food-spinner');
+
+                AiCapture.capture(function(b64) {
+                    if (!b64) return;
+                    // Show preview
+                    preview.innerHTML = '<img src="' + b64 + '" alt="Food photo">';
+                    preview.style.display = 'block';
+                    result.style.display = 'none';
+                    spinner.style.display = 'block';
+                    btn.disabled = true;
+
+                    AiCapture.analyze(b64, 'food').then(function(data) {
+                        spinner.style.display = 'none';
+                        result.innerHTML =
+                            '<div class="ai-result-card">' +
+                                '<h4>' + (data.name || 'Food') + '</h4>' +
+                                '<div class="ai-macros">' +
+                                    '<span class="ai-macro"><strong>' + (data.calories || '?') + '</strong> kcal</span>' +
+                                    '<span class="ai-macro"><strong>' + (data.protein_g || '?') + 'g</strong> protein</span>' +
+                                    '<span class="ai-macro"><strong>' + (data.carbs_g || '?') + 'g</strong> carbs</span>' +
+                                    '<span class="ai-macro"><strong>' + (data.fat_g || '?') + 'g</strong> fat</span>' +
+                                '</div>' +
+                                '<span class="ai-score-badge score-' + (data.healthScore || 3) + '">Health: ' + (data.healthScore || '?') + '/5</span>' +
+                                '<p class="ai-desc">' + (data.description || '') + '</p>' +
+                                '<button class="btn btn-primary btn-small ai-log-btn">Log this meal</button>' +
+                            '</div>';
+                        result.style.display = 'block';
+                        btn.disabled = false;
+
+                        // Log meal button
+                        result.querySelector('.ai-log-btn').addEventListener('click', function() {
+                            Storage.addMeal('snack',
+                                (data.name || 'AI-analyzed meal') + ' (' + (data.calories || '?') + ' kcal)',
+                                data.healthScore || 3);
+                            self.renderMeals();
+                            Util.showFeedback(document.getElementById('meal-feedback'), 'AI meal logged! 🍽️', 'success');
+                        });
+                    }).catch(function(err) {
+                        spinner.style.display = 'none';
+                        result.innerHTML = '<p class="ai-error">❌ ' + err.message + '</p>';
+                        result.style.display = 'block';
+                        btn.disabled = false;
+                    });
+                });
+            });
         }
     },
 
@@ -699,6 +914,7 @@ var page = {
             this.initStudyLogger();
             this.renderStudySummary();
             this.initBreakModal();
+            this.initAiStudy();
         },
 
         // ---- Pomodoro Timer ----
@@ -926,6 +1142,60 @@ var page = {
                 this.completedSessions = pomodoroSessions.length;
                 this.renderPomodoroCount();
             }
+        },
+
+        // ---- AI Study Verification ----
+        initAiStudy: function() {
+            var self = this;
+            var btn = document.getElementById('ai-study-btn');
+            if (!btn) return;
+
+            btn.addEventListener('click', function() {
+                var preview = document.getElementById('ai-study-preview');
+                var result = document.getElementById('ai-study-result');
+                var spinner = document.getElementById('ai-study-spinner');
+
+                AiCapture.capture(function(b64) {
+                    if (!b64) return;
+                    preview.innerHTML = '<img src="' + b64 + '" alt="Study photo">';
+                    preview.style.display = 'block';
+                    result.style.display = 'none';
+                    spinner.style.display = 'block';
+                    btn.disabled = true;
+
+                    AiCapture.analyze(b64, 'study').then(function(data) {
+                        spinner.style.display = 'none';
+                        var icon = data.studying ? '✅' : '⚠️';
+                        result.innerHTML =
+                            '<div class="ai-result-card">' +
+                                '<h4>' + icon + ' ' + (data.studying ? 'Study session detected!' : 'Not a study setup') + '</h4>' +
+                                '<p class="ai-desc">' + (data.description || '') + '</p>' +
+                                (data.suggestions && data.suggestions.length
+                                    ? '<div class="ai-suggestions">' + data.suggestions.map(function(s) { return '<span class="ai-tip">💡 ' + s + '</span>'; }).join('') + '</div>'
+                                    : '') +
+                                (data.studying
+                                    ? '<button class="btn btn-primary btn-small ai-log-study">Log 25 min session</button>'
+                                    : '') +
+                            '</div>';
+                        result.style.display = 'block';
+                        btn.disabled = false;
+
+                        var logBtn = result.querySelector('.ai-log-study');
+                        if (logBtn) {
+                            logBtn.addEventListener('click', function() {
+                                Storage.addStudySession('Verified Study', 25);
+                                self.renderStudySummary();
+                                Util.showFeedback(document.getElementById('study-feedback'), 'Study session verified & logged! 📚', 'success');
+                            });
+                        }
+                    }).catch(function(err) {
+                        spinner.style.display = 'none';
+                        result.innerHTML = '<p class="ai-error">❌ ' + err.message + '</p>';
+                        result.style.display = 'block';
+                        btn.disabled = false;
+                    });
+                });
+            });
         }
     }
 };

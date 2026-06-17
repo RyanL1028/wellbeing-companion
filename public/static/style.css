@@ -1707,6 +1707,170 @@ main {
     color: var(--primary-dark);
 }
 
+/* ---- AI Analysis Components ---- */
+.ai-card {
+    border: 1px solid var(--primary-light);
+    background: linear-gradient(135deg, var(--card-bg), var(--primary-light));
+}
+
+.ai-spinner {
+    text-align: center;
+    padding: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.ai-preview {
+    margin-top: 0.75rem;
+    text-align: center;
+}
+
+.ai-preview img {
+    max-width: 100%;
+    max-height: 240px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    object-fit: cover;
+}
+
+.ai-preview-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.2rem;
+}
+
+.ai-result {
+    margin-top: 0.75rem;
+}
+
+.ai-result-card {
+    background: var(--card-bg-solid);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    border: 1px solid var(--border);
+}
+
+.ai-result-card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.ai-macros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.ai-macro {
+    background: var(--bg);
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.ai-macro strong {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.ai-score-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.ai-score-badge.score-1,
+.ai-score-badge.score-2 { background: #FEE2E2; color: #DC2626; }
+.ai-score-badge.score-3 { background: #FEF3C7; color: #D97706; }
+.ai-score-badge.score-4,
+.ai-score-badge.score-5 { background: #D1FAE5; color: #059669; }
+
+.ai-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.ai-error {
+    color: #DC2626;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.ai-log-btn,
+.ai-log-study,
+.ai-log-water {
+    margin-top: 0.5rem;
+}
+
+/* Water tracking */
+.ai-water-btns {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.ai-water-previews {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.ai-water-previews .ai-preview {
+    flex: 1;
+    max-width: 48%;
+}
+
+.ai-water-compare {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.ai-water-drank {
+    font-size: 0.95rem;
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Study suggestions */
+.ai-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.ai-tip {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding: 0.4rem 0.6rem;
+    background: var(--bg);
+    border-radius: var(--radius-xs);
+    line-height: 1.4;
+}
+
 /* ---- Print Styles ---- */
 @media print {
     .bottom-nav, .app-header, .quick-actions, .btn {
