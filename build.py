@@ -20,6 +20,7 @@ ROUTES = {
     '/physical-health': 'physical-health.html',
     '/nutrition': 'nutrition.html',
     '/study-life': 'study-life.html',
+    '/sleep': 'sleep.html',
     '/auth': 'auth.html',
 }
 

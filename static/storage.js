@@ -170,12 +170,31 @@ var Storage = (function() {
             meals: [],
             activities: [],
             studySessions: [],
+            sleepLog: [],
             goals: {
                 waterTarget: 8,
                 activityTarget: 30,
-                studyTarget: 120
+                studyTarget: 120,
+                sleepTarget: 8
             }
         };
+    }
+
+    // ---- Sleep ----
+
+    function getSleepLog() { return _read().sleepLog || []; }
+
+    function addSleep(bedtime, wakeTime, quality, note) {
+        var data = _read();
+        data.sleepLog.push({ date: _today(), bedtime: bedtime, wakeTime: wakeTime, quality: quality || 3, note: note || '' });
+        _write(data);
+    }
+
+    function getSleepStreak() {
+        var data = _read();
+        if (!data.sleepLog || !data.sleepLog.length) return 0;
+        var dates = data.sleepLog.filter(function(s) { return (s.bedtime && s.wakeTime); }).map(function(s) { return s.date; });
+        return _computeStreakFromDates(dates);
     }
 
     function _today() {
@@ -389,6 +408,11 @@ var Storage = (function() {
         // Goals
         getGoals: getGoals,
         setGoal: setGoal,
+
+        // Sleep
+        getSleepLog: getSleepLog,
+        addSleep: addSleep,
+        getSleepStreak: getSleepStreak,
 
         // Helpers
         _today: _today,

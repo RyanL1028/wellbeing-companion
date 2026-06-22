@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set page_id = "sleep" %}
+{% block title %}Sleep — Wellbeing-Companion{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">😴 Sleep Tracker</h2>
+
+    <!-- Sleep Logger -->
+    <div class="card">
+        <h3 class="card-title">Log Your Sleep</h3>
+        <div class="form-group">
+            <label for="sleep-bedtime">Bedtime</label>
+            <input type="time" id="sleep-bedtime" value="23:00">
+        </div>
+        <div class="form-group">
+            <label for="sleep-wake">Wake Time</label>
+            <input type="time" id="sleep-wake" value="07:00">
+        </div>
+        <div class="form-group">
+            <label>Sleep Quality</label>
+            <div class="rating-picker" id="sleep-rating-picker">
+                <button class="rating-btn" data-rating="1" aria-label="Terrible">😫</button>
+                <button class="rating-btn" data-rating="2" aria-label="Poor">😕</button>
+                <button class="rating-btn selected" data-rating="3" aria-label="Okay">😐</button>
+                <button class="rating-btn" data-rating="4" aria-label="Good">😊</button>
+                <button class="rating-btn" data-rating="5" aria-label="Great">🤩</button>
+            </div>
+            <input type="hidden" id="sleep-quality" value="3">
+        </div>
+        <div class="form-group">
+            <label for="sleep-note">Notes (optional)</label>
+            <input type="text" id="sleep-note" placeholder="e.g., Had trouble falling asleep" maxlength="100">
+        </div>
+        <button class="btn btn-primary btn-full" id="sleep-save">Log Sleep</button>
+        <div id="sleep-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <!-- Sleep History -->
+    <div class="card">
+        <h3 class="card-title">Recent Sleep</h3>
+        <div id="sleep-summary" class="sleep-summary">
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-avg">--</span><span class="sleep-stat-label">avg hours</span></div>
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-streak">0</span><span class="sleep-stat-label">day streak</span></div>
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-quality-avg">--</span><span class="sleep-stat-label">avg quality</span></div>
+        </div>
+        <ul id="sleep-list" class="log-list">
+            <li class="log-empty">No sleep logged yet.</li>
+        </ul>
+    </div>
+
+    <!-- AI Sleep Tips -->
+    <div class="card ai-card">
+        <h3 class="card-title">🤖 AI Sleep Coach</h3>
+        <p class="card-subtitle">Get personalized tips based on your sleep patterns.</p>
+        <button class="btn btn-primary" id="sleep-ai-btn">💤 Analyze My Sleep</button>
+        <div class="ai-spinner" id="sleep-ai-spinner" style="display:none;">🔍 Analyzing your sleep…</div>
+        <div class="ai-result" id="sleep-ai-result" style="display:none;"></div>
+    </div>
+</section>
+{% endblock %}

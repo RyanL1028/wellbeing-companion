@@ -48,16 +48,10 @@
     <!-- AI Water Tracking -->
     <div class="card ai-card">
         <h3 class="card-title">🤖 AI Water Tracker</h3>
-        <p class="card-subtitle">Take before & after photos to let AI count how many cups of water you drank.</p>
-        <div class="ai-water-btns">
-            <button class="btn btn-outline" id="ai-water-before">📷 Before Photo</button>
-            <button class="btn btn-outline" id="ai-water-after">📷 After Photo</button>
-        </div>
-        <div class="ai-water-previews">
-            <span class="ai-preview" id="ai-water-before-preview" style="display:none;"></span>
-            <span class="ai-preview" id="ai-water-after-preview" style="display:none;"></span>
-        </div>
-        <div class="ai-spinner" id="ai-water-spinner" style="display:none;">🔍 Analyzing cups…</div>
+        <p class="card-subtitle">Snap a photo of your water bottles/cups — AI counts how many you have.</p>
+        <button class="btn btn-primary" id="ai-water-btn">📷 Scan Water</button>
+        <div class="ai-spinner" id="ai-water-spinner" style="display:none;">🔍 Counting your cups…</div>
+        <div class="ai-preview" id="ai-water-preview" style="display:none;"></div>
         <div class="ai-result" id="ai-water-result" style="display:none;"></div>
     </div>
 

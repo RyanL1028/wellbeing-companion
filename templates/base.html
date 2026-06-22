@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
     <title>{% block title %}Wellbeing-Companion{% endblock %}</title>
 </head>
 <body data-page="{{ page_id }}">
@@ -38,6 +38,32 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- CyberTech Footer -->
+    <div style="text-align:center;padding:10px;font-size:0.72rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:20px">
+        A <a href="https://cybertech-co.web.app" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500;text-decoration:none">CyberTech</a> product — student-made, student-driven
+    </div>
+
+    <!-- AI Wellness Coach Chatbot -->
+    <div class="chat-fab" id="chat-fab" aria-label="AI Wellness Coach">
+        <span class="chat-fab-icon">🤖</span>
+    </div>
+    <div class="chat-modal" id="chat-modal" style="display:none;">
+        <div class="chat-header">
+            <span>🤖 AI Wellness Coach</span>
+            <div class="chat-header-right">
+                <span class="chat-limit" id="chat-limit">5/5</span>
+                <button class="chat-close" id="chat-close">✕</button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-msg bot">Hi! I'm your AI wellness coach. <br><br>🔐 <strong>Sign in required</strong> — your data helps me give personalized advice.<br><small>(6 messages/day — free!)</small></div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask me anything..." maxlength="200">
+            <button class="btn btn-primary btn-small" id="chat-send">Send</button>
+        </div>
+    </div>
+
     <!-- Bottom navigation bar (mobile-friendly) -->
     <nav class="bottom-nav">
         <a href="/" class="nav-item {% if page_id == 'dashboard' %}active{% endif %}" aria-label="Dashboard">
@@ -59,6 +85,10 @@
         <a href="/study-life" class="nav-item {% if page_id == 'study' %}active{% endif %}" aria-label="Study-Life Balance">
             <span class="nav-icon">📚</span>
             <span class="nav-label">Study</span>
+        </a>
+        <a href="/sleep" class="nav-item {% if page_id == 'sleep' %}active{% endif %}" aria-label="Sleep Tracker">
+            <span class="nav-icon">😴</span>
+            <span class="nav-label">Sleep</span>
         </a>
     </nav>
 
@@ -148,11 +178,27 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                navigator.serviceWorker.register('/sw.js?v=5').then(function(reg) {
+                    console.log('[App] SW registered:', reg.scope);
+                    // Force update if there's a waiting worker
+                    if (reg.waiting) {
+                        reg.waiting.postMessage({ action: 'skip-waiting' });
+                    }
+                    reg.addEventListener('updatefound', function() {
+                        var newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[App] New SW waiting — reload to activate');
+                            }
+                        });
+                    });
+                }).catch(function(err) {
                     console.log('Service Worker registration failed:', err);
                 });
             });
         }
     </script>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

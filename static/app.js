@@ -47,6 +47,211 @@ var Util = {
 };
 
 
+// ---- Smart Notifications ----
+
+var Notify = {
+    _timer: null,
+    _lastSent: {},
+    _config: {
+        water: false,
+        stretch: false,
+        bed: false,
+        study: false
+    },
+    _key: 'wellnessReminders',
+
+    NOTIFICATIONS: {
+        water: { title: '💧 Drink Water!', body: 'Stay hydrated — grab a glass of water now.', icon: '/static/icons/icon-192.png', tag: 'reminder-water' },
+        stretch: { title: '🤸 Stretch Break', body: 'You\'ve been sitting for a while. Take 2 minutes to stretch!', icon: '/static/icons/icon-192.png', tag: 'reminder-stretch' },
+        bed: { title: '🌙 Time to Wind Down', body: 'Stop doomscrolling! Put your phone away and relax.', icon: '/static/icons/icon-192.png', tag: 'reminder-bed' },
+        study: { title: '📚 Study Time', body: 'Ready to focus? Start a Pomodoro session!', icon: '/static/icons/icon-192.png', tag: 'reminder-study' }
+    },
+
+    init: function() {
+        var saved = localStorage.getItem(this._key);
+        if (saved) {
+            try { this._config = JSON.parse(saved); } catch(e) {}
+        }
+        // Start the page-level timer (service workers get killed, pages don't)
+        this._startTimer();
+    },
+
+    requestPermission: function(callback) {
+        if (!('Notification' in window)) {
+            if (callback) callback('denied');
+            return;
+        }
+        if (Notification.permission === 'granted') {
+            if (callback) callback('granted');
+            return;
+        }
+        Notification.requestPermission().then(function(perm) {
+            if (callback) callback(perm);
+        });
+    },
+
+    toggle: function(type, enabled) {
+        this._config[type] = enabled;
+        localStorage.setItem(this._key, JSON.stringify(this._config));
+        this._startTimer();
+        // Also sync to SW for background notifications
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                action: enabled ? 'start-reminders' : 'stop-reminders',
+                config: this._config
+            });
+        }
+    },
+
+    isEnabled: function(type) {
+        return !!this._config[type];
+    },
+
+    _startTimer: function() {
+        var self = this;
+        if (this._timer) clearInterval(this._timer);
+        this._lastSent = {};
+        this._ticks = 0;
+        // Check every 30 seconds
+        this._timer = setInterval(function() { self._check(); }, 30000);
+        // Also fire immediately once to verify
+        setTimeout(function() { self._check(); }, 2000);
+    },
+
+    _check: function() {
+        if (Notification.permission !== 'granted') return;
+        this._ticks = (this._ticks || 0) + 1;
+
+        // For testing: fire every 2 ticks (60s) for any enabled reminder, any time of day
+        if (this._ticks % 2 === 0) {
+            if (this._config.water) this._show('water');
+            if (this._config.stretch) this._show('stretch');
+        }
+
+        // Bed: every 4 ticks (2 min) after 9pm (for testing)
+        var hour = new Date().getHours();
+        if (this._config.bed && hour >= 21 && this._ticks % 4 === 0) {
+            this._show('bed');
+        }
+    },
+
+    _show: function(type) {
+        var n = this.NOTIFICATIONS[type];
+        if (!n) return;
+        try {
+            new Notification(n.title, { body: n.body, icon: n.icon, tag: n.tag, vibrate: [200, 100, 200], requireInteraction: true });
+        } catch(e) {}
+    }
+};
+
+
+// ---- AI Wellness Chatbot ----
+
+var Chat = {
+    _messages: [],
+    _limitKey: 'chatLimit',
+    _apiUrl: 'https://wellbeing-companion.wellbeing-companion.workers.dev/api/analyze',
+
+    init: function() {
+        try {
+            var self = this;
+            var fab = document.getElementById('chat-fab');
+            var modal = document.getElementById('chat-modal');
+            if (!fab || !modal) return;
+
+            this._updateLimit();
+
+            fab.addEventListener('click', function() {
+                modal.style.display = 'flex';
+                fab.style.display = 'none';
+                self._scrollDown();
+            });
+
+            document.getElementById('chat-close').addEventListener('click', function() {
+                modal.style.display = 'none';
+                fab.style.display = 'flex';
+            });
+
+            document.getElementById('chat-send').addEventListener('click', function() { self._send(); });
+            document.getElementById('chat-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') self._send(); });
+        } catch(e) { /* fail silently */ }
+    },
+
+    _getCount: function() {
+        var today = new Date().toISOString().split('T')[0];
+        var saved = localStorage.getItem(this._limitKey);
+        if (!saved) return { date: today, count: 0 };
+        try { var d = JSON.parse(saved); return d.date === today ? d : { date: today, count: 0 }; } catch(e) { return { date: today, count: 0 }; }
+    },
+
+    _updateLimit: function() {
+        var d = this._getCount();
+        var remaining = Math.max(0, 6 - d.count);
+        var el = document.getElementById('chat-limit');
+        if (el) el.textContent = remaining + '/5';
+        var sendBtn = document.getElementById('chat-send');
+        if (sendBtn) sendBtn.disabled = remaining <= 0;
+    },
+
+    _send: function() {
+        var self = this;
+        var input = document.getElementById('chat-input');
+        var msg = input.value.trim();
+        if (!msg) return;
+
+        // Require sign-in for AI chatbot
+        if (typeof Auth === 'undefined' || !Auth.isSignedIn()) {
+            this._addMsg('bot', '🔐 Please <a href="/auth" style="color:var(--primary);">sign in</a> to use the AI coach. It\'s free!');
+            return;
+        }
+
+        var d = this._getCount();
+        if (d.count >= 6) { this._addMsg('bot', '⚠️ Daily limit reached! 6/6 messages used. Come back tomorrow!'); return; }
+        d.count++; localStorage.setItem(this._limitKey, JSON.stringify(d));
+        this._updateLimit();
+
+        this._addMsg('user', msg);
+        input.value = '';
+        var loading = this._addMsg('bot', '...');
+
+        // Build context from user's wellness data
+        var ctx = '';
+        try {
+            var moods = Storage.getMoods().slice(-3).map(function(m){return m.date+':'+m.mood}).join(',');
+            var water = Storage.getWaterGlasses(Storage._todayKey());
+            var acts = Storage.getActivities().slice(-3).map(function(a){return a.type+':'+a.minutes+'min'}).join(',');
+            var study = Storage.getStudySessions().slice(-3).map(function(s){return s.subject+':'+s.minutes+'min'}).join(',');
+            var sleep = Storage.getSleepLog().slice(-3).map(function(s){return s.bedtime+'-'+s.wakeTime+' q:'+s.quality}).join(',');
+            ctx = 'Context — moods: ['+moods+'], water today: '+water+' glasses, activities: ['+acts+'], study: ['+study+'], sleep: ['+sleep+']. ';
+        } catch(e) {}
+
+        fetch(this._apiUrl, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({image:'skip', type:'chat', prompt: ctx + 'User message: ' + msg})
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            loading.textContent = data.reply || data.error || 'Sorry, try again!';
+        }).catch(function() {
+            loading.textContent = 'Connection error. Try again.';
+        });
+    },
+
+    _addMsg: function(role, text) {
+        var container = document.getElementById('chat-messages');
+        var div = document.createElement('div');
+        div.className = 'chat-msg ' + role;
+        div.textContent = text;
+        container.appendChild(div);
+        this._scrollDown();
+        return div;
+    },
+
+    _scrollDown: function() {
+        var container = document.getElementById('chat-messages');
+        if (container) container.scrollTop = container.scrollHeight;
+    }
+};
+
+
 // ---- AI Image Capture ----
 
 var AiCapture = {
@@ -139,10 +344,89 @@ var page = {
         init: function() {
             if (this._ready) return;
             this._ready = true;
-            this.renderWellnessScore();
-            this.renderStreaks();
-            this.initQuickAdds();
-            this.showDailyTip();
+            try { this.renderWellnessScore(); } catch(e) {}
+            try { this.renderStreaks(); } catch(e) {}
+            try { this.initQuickAdds(); } catch(e) {}
+            try { this.showDailyTip(); } catch(e) {}
+            try { this.initReminders(); } catch(e) {}
+            try { this.renderAchievements(); } catch(e) {}
+        },
+
+        renderAchievements: function() {
+            try {
+                var badges = {
+                    'ach-water-7': Storage.getWaterStreak() >= 7,
+                    'ach-mood-7': Storage.getMoodStreak() >= 7,
+                    'ach-activity-5': Storage.getActivityStreak() >= 5,
+                    'ach-study-5': Storage.getStudyStreak() >= 5,
+                    'ach-sleep-7': Storage.getSleepStreak() >= 7,
+                    'ach-wellness-80': this.computeScore() >= 80
+                };
+                Object.keys(badges).forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el && badges[id]) { el.classList.remove('locked'); el.classList.add('unlocked'); }
+                });
+            } catch(e) {}
+        },
+
+        initReminders: function() {
+            Notify.init();
+
+            // Set checkbox states from saved prefs
+            ['water', 'stretch', 'bed', 'study'].forEach(function(type) {
+                var cb = document.getElementById('remind-' + type);
+                if (cb) cb.checked = Notify.isEnabled(type);
+            });
+
+            // Enable button requests notification permission
+            var enableBtn = document.getElementById('reminders-enable');
+            if (enableBtn) {
+                if (Notification.permission === 'granted') {
+                    enableBtn.textContent = '✅ Notifications Enabled';
+                    enableBtn.disabled = true;
+                }
+                enableBtn.addEventListener('click', function() {
+                    Notify.requestPermission(function(perm) {
+                        if (perm === 'granted') {
+                            enableBtn.textContent = '✅ Notifications Enabled';
+                            enableBtn.disabled = true;
+                            // Restart timer now that we have permission
+                            Notify._startTimer();
+                        } else {
+                            alert('Please allow notifications in your browser settings to get reminders.');
+                        }
+                    });
+                });
+            }
+
+            // Test notification button
+            var testBtn = document.getElementById('reminders-test');
+            if (testBtn) {
+                testBtn.addEventListener('click', function() {
+                    Notify.requestPermission(function(perm) {
+                        if (perm !== 'granted') {
+                            alert('Please allow notifications first!');
+                            return;
+                        }
+                        // Send immediate test via service worker
+                        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({
+                                action: 'test-notification',
+                                type: 'bed'
+                            });
+                        } else {
+                            // Fallback: show directly from page
+                            new Notification('🌙 Time to Wind Down', {
+                                body: 'Stop doomscrolling! It\'s getting late — put your phone away and relax.',
+                                icon: '/static/icons/icon-192.png',
+                                vibrate: [200, 100, 200],
+                                requireInteraction: true
+                            });
+                        }
+                        alert('✅ Test notification sent! Check your notifications.');
+                    });
+                });
+            }
         },
 
         renderWellnessScore: function() {
@@ -617,77 +901,71 @@ var page = {
         },
 
         // ---- AI Water Tracking ----
+        _aiWaterReady: false,
         initAiWater: function() {
-            var beforeBtn = document.getElementById('ai-water-before');
-            var afterBtn = document.getElementById('ai-water-after');
-            if (!beforeBtn || !afterBtn) return;
+            if (this._aiWaterReady) return;
+            this._aiWaterReady = true;
 
-            var beforeB64 = null;
-            var beforePreview = document.getElementById('ai-water-before-preview');
-            var afterPreview = document.getElementById('ai-water-after-preview');
+            var btn = document.getElementById('ai-water-btn');
+            if (!btn) return;
+
+            var preview = document.getElementById('ai-water-preview');
             var result = document.getElementById('ai-water-result');
             var spinner = document.getElementById('ai-water-spinner');
 
-            beforeBtn.addEventListener('click', function() {
+            btn.addEventListener('click', function() {
                 AiCapture.capture(function(b64) {
                     if (!b64) return;
-                    beforeB64 = b64;
-                    beforePreview.innerHTML = '<img src="' + b64 + '" alt="Before"><span class="ai-preview-label">Before</span>';
-                    beforePreview.style.display = 'inline-block';
+                    preview.innerHTML = '<img src="' + b64 + '" alt="Water photo">';
+                    preview.style.display = 'block';
                     result.style.display = 'none';
-                });
-            });
-
-            afterBtn.addEventListener('click', function() {
-                if (!beforeB64) {
-                    result.innerHTML = '<p class="ai-error">⚠️ Take a "before" photo first.</p>';
-                    result.style.display = 'block';
-                    return;
-                }
-                AiCapture.capture(function(b64) {
-                    if (!b64) return;
-                    afterPreview.innerHTML = '<img src="' + b64 + '" alt="After"><span class="ai-preview-label">After</span>';
-                    afterPreview.style.display = 'inline-block';
                     spinner.style.display = 'block';
-                    result.style.display = 'none';
-                    beforeBtn.disabled = afterBtn.disabled = true;
+                    btn.disabled = true;
 
-                    AiCapture.analyze(b64, 'water').then(function(afterData) {
-                        // Also analyze the before image to get a baseline
-                        return AiCapture.analyze(beforeB64, 'water').then(function(beforeData) {
-                            spinner.style.display = 'none';
-                            var beforeCups = beforeData.cupsCount || 0;
-                            var afterCups = afterData.cupsCount || 0;
-                            var drank = Math.max(0, afterCups - beforeCups);
+                    AiCapture.analyze(b64, 'water').then(function(data) {
+                        spinner.style.display = 'none';
+                        var cups = data.cupsCount || 0;
+                        result.innerHTML =
+                            '<div class="ai-result-card">' +
+                                '<h4>💧 Water Detected</h4>' +
+                                '<p class="ai-water-drank">AI sees ~<strong>' + cups + ' cups</strong> of water (' + (cups * 250) + 'ml)</p>' +
+                                '<p class="ai-desc">' + (data.description || '') + '</p>' +
+                                '<div class="ai-water-btns">' +
+                                    '<button class="btn btn-primary btn-small ai-log-water" data-cups="' + cups + '">Log ' + cups + ' cups</button>' +
+                                    '<button class="btn btn-outline btn-small ai-log-water-1">Log 1 cup</button>' +
+                                    '<button class="btn btn-outline btn-small ai-log-water-2">Log 2 cups</button>' +
+                                '</div>' +
+                            '</div>';
+                        result.style.display = 'block';
+                        btn.disabled = false;
 
-                            result.innerHTML =
-                                '<div class="ai-result-card">' +
-                                    '<h4>💧 Water Analysis</h4>' +
-                                    '<div class="ai-water-compare">' +
-                                        '<div><strong>Before:</strong> ' + beforeCups + ' cups</div>' +
-                                        '<div><strong>After:</strong> ' + afterCups + ' cups</div>' +
-                                    '</div>' +
-                                    '<p class="ai-water-drank">You drank ~<strong>' + drank + '</strong> cups (~' + (drank * 250) + 'ml)</p>' +
-                                    '<button class="btn btn-primary btn-small ai-log-water">Log ' + drank + ' cups</button>' +
-                                '</div>';
-                            result.style.display = 'block';
-                            beforeBtn.disabled = afterBtn.disabled = false;
-
-                            result.querySelector('.ai-log-water').addEventListener('click', function() {
-                                for (var i = 0; i < drank; i++) {
-                                    Storage.fillWaterGlass();
-                                }
-                                if (typeof page.nutrition !== 'undefined' && page.nutrition.renderWaterGlasses) {
-                                    page.nutrition.renderWaterGlasses();
-                                }
-                                Util.showFeedback(document.getElementById('activity-feedback'), drank + ' cups logged! 💧', 'success');
-                            });
+                        result.querySelector('.ai-log-water').addEventListener('click', function() {
+                            var n = parseInt(this.dataset.cups) || 1;
+                            for (var i = 0; i < n; i++) Storage.fillWaterGlass();
+                            if (typeof page.nutrition !== 'undefined' && page.nutrition.renderWaterGlasses) {
+                                page.nutrition.renderWaterGlasses();
+                            }
+                            Util.showFeedback(document.getElementById('activity-feedback'), n + ' cups logged! 💧', 'success');
+                        });
+                        result.querySelector('.ai-log-water-1').addEventListener('click', function() {
+                            Storage.fillWaterGlass();
+                            if (typeof page.nutrition !== 'undefined' && page.nutrition.renderWaterGlasses) {
+                                page.nutrition.renderWaterGlasses();
+                            }
+                            Util.showFeedback(document.getElementById('activity-feedback'), '1 cup logged! 💧', 'success');
+                        });
+                        result.querySelector('.ai-log-water-2').addEventListener('click', function() {
+                            for (var i = 0; i < 2; i++) Storage.fillWaterGlass();
+                            if (typeof page.nutrition !== 'undefined' && page.nutrition.renderWaterGlasses) {
+                                page.nutrition.renderWaterGlasses();
+                            }
+                            Util.showFeedback(document.getElementById('activity-feedback'), '2 cups logged! 💧', 'success');
                         });
                     }).catch(function(err) {
                         spinner.style.display = 'none';
                         result.innerHTML = '<p class="ai-error">❌ ' + err.message + '</p>';
                         result.style.display = 'block';
-                        beforeBtn.disabled = afterBtn.disabled = false;
+                        btn.disabled = false;
                     });
                 });
             });
@@ -1197,6 +1475,108 @@ var page = {
                 });
             });
         }
+    },
+    // ================================================
+    // Sleep Tracker
+    // ================================================
+    sleep: {
+        selectedQuality: 3,
+        _ready: false,
+
+        init: function() {
+            if (this._ready) return;
+            this._ready = true;
+            this.initQualityPicker();
+            this.initLogger();
+            this.renderSummary();
+            this.initAiSleep();
+        },
+
+        initQualityPicker: function() {
+            var self = this;
+            var picker = document.getElementById('sleep-rating-picker');
+            if (!picker) return;
+            picker.querySelector('.rating-btn[data-rating="3"]').classList.add('selected');
+            picker.addEventListener('click', function(e) {
+                var btn = e.target.closest('.rating-btn');
+                if (!btn) return;
+                picker.querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); });
+                btn.classList.add('selected');
+                self.selectedQuality = parseInt(btn.dataset.rating);
+                document.getElementById('sleep-quality').value = self.selectedQuality;
+            });
+        },
+
+        initLogger: function() {
+            var self = this;
+            document.getElementById('sleep-save').addEventListener('click', function() {
+                var bedtime = document.getElementById('sleep-bedtime').value;
+                var wake = document.getElementById('sleep-wake').value;
+                var note = document.getElementById('sleep-note').value.trim();
+                if (!bedtime || !wake) {
+                    Util.showFeedback(document.getElementById('sleep-feedback'), 'Please set both bedtime and wake time.', 'error');
+                    return;
+                }
+                Storage.addSleep(bedtime, wake, self.selectedQuality, note);
+                Util.showFeedback(document.getElementById('sleep-feedback'), 'Sleep logged! 😴', 'success');
+                document.getElementById('sleep-note').value = '';
+                self.renderSummary();
+            });
+        },
+
+        renderSummary: function() {
+            var log = Storage.getSleepLog();
+            var today = Util.today();
+            var recent = log.filter(function(s) { return s.date >= today; }).slice(-7);
+            var totalHrs = 0, totalQ = 0, count = 0;
+            recent.forEach(function(s) {
+                if (s.bedtime && s.wakeTime) {
+                    var b = s.bedtime.split(':'), w = s.wakeTime.split(':');
+                    var hrs = (parseInt(w[0]) + parseInt(w[1])/60) - (parseInt(b[0]) + parseInt(b[1])/60);
+                    if (hrs < 0) hrs += 24;
+                    totalHrs += hrs; totalQ += s.quality || 3; count++;
+                }
+            });
+            var avgHrs = count > 0 ? (totalHrs / count).toFixed(1) : '--';
+            var avgQ = count > 0 ? (totalQ / count).toFixed(1) : '--';
+            var streak = Storage.getSleepStreak();
+            document.getElementById('sleep-avg').textContent = avgHrs;
+            document.getElementById('sleep-streak').textContent = streak;
+            document.getElementById('sleep-quality-avg').textContent = avgQ;
+
+            var list = document.getElementById('sleep-list');
+            if (!list) return;
+            if (recent.length === 0) { list.innerHTML = '<li class="log-empty">No sleep logged yet.</li>'; return; }
+            var html = '';
+            recent.reverse().forEach(function(s) {
+                html += '<li><span class="log-item-left"><span class="log-item-icon">😴</span><span>' + Util.formatDate(s.date) + '</span></span><span>' + (s.bedtime||'?') + ' – ' + (s.wakeTime||'?') + ' (' + (['','😫','😕','😐','😊','🤩'][s.quality]||'😐') + ')</span></li>';
+            });
+            list.innerHTML = html;
+        },
+
+        initAiSleep: function() {
+            var self = this;
+            var btn = document.getElementById('sleep-ai-btn');
+            if (!btn) return;
+            btn.addEventListener('click', function() {
+                var log = Storage.getSleepLog();
+                if (log.length === 0) { alert('Log some sleep first!'); return; }
+                var spinner = document.getElementById('sleep-ai-spinner');
+                var result = document.getElementById('sleep-ai-result');
+                spinner.style.display = 'block'; result.style.display = 'none'; btn.disabled = true;
+                var summary = log.slice(-7).map(function(s) { return s.bedtime + '–' + s.wakeTime + ' q:' + s.quality; }).join('|');
+                var prompt = 'Based on this sleep data (bedtime-waketime|quality1-5): ' + summary + '. Give 2-3 brief personalized sleep tips. Keep it under 100 words.';
+                // Call Mistral text-only
+                fetch('https://wellbeing-companion.wellbeing-companion.workers.dev/api/analyze', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({image:'skip',type:'chat',prompt:prompt})
+                }).then(function(r){return r.json();}).then(function(data){
+                    spinner.style.display = 'none';
+                    result.innerHTML = '<div class="ai-result-card"><h4>💤 AI Sleep Tips</h4><p class="ai-desc">' + (data.tips || data.error || 'Try going to bed and waking up at the same time each day.') + '</p></div>';
+                    result.style.display = 'block'; btn.disabled = false;
+                }).catch(function(e){ spinner.style.display='none'; result.innerHTML='<p class="ai-error">❌ '+e.message+'</p>'; result.style.display='block'; btn.disabled=false; });
+            });
+        }
     }
 };
 
@@ -1208,6 +1588,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (pageName && page[pageName] && typeof page[pageName].init === 'function') {
         page[pageName].init();
     }
+
+    // Init chatbot on all pages
+    if (typeof Chat !== 'undefined') Chat.init();
 
     // Set current date in header
     var dateEl = document.getElementById('current-date');

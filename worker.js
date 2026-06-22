@@ -29,7 +29,31 @@ export default {
     }
 
     try {
-      const { image, type } = await request.json();
+      const { image, type, prompt } = await request.json();
+
+      // Text-only chat mode (for sleep tips + wellness coach)
+      if (type === 'chat') {
+        const chatResponse = await fetch("https://api.mistral.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${env.MISTRAL_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "mistral-small-latest",
+            messages: [
+              { role: "system", content: "You are a friendly wellness coach for students. Give short, actionable, encouraging advice. Keep responses under 120 words. Never give medical advice." },
+              { role: "user", content: prompt }
+            ],
+            max_tokens: 250,
+            temperature: 0.7
+          })
+        });
+        const chatData = await chatResponse.json();
+        return json({ reply: chatData.choices[0].message.content.trim() }, 200);
+      }
+
+      // Image analysis mode
       if (!image || !PROMPTS[type]) {
         return json({ error: "Missing image or invalid type (food, water, study)" }, 400);
       }

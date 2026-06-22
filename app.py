@@ -74,6 +74,12 @@ def study_life():
     return render_template('study-life.html')
 
 
+@app.route('/sleep')
+def sleep():
+    """Sleep tracker — log bedtime, wake time, quality."""
+    return render_template('sleep.html')
+
+
 @app.route('/auth')
 def auth():
     """Authentication page — sign in / sign up."""

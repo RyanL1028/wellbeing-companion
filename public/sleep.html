@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="manifest" href="/static/manifest.json">
     <link rel="stylesheet" href="/static/style.css?v=5">
-    <title>Physical Health — Wellbeing-Companion</title>
+    <title>Sleep — Wellbeing-Companion</title>
 </head>
-<body data-page="physical">
+<body data-page="sleep">
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -37,94 +37,58 @@
     <main id="main-content">
         
 <section class="page-section">
-    <h2 class="section-title">💪 Physical Health</h2>
+    <h2 class="section-title">😴 Sleep Tracker</h2>
 
-    <!-- Activity Logger -->
+    <!-- Sleep Logger -->
     <div class="card">
-        <h3 class="card-title">Log Activity</h3>
+        <h3 class="card-title">Log Your Sleep</h3>
         <div class="form-group">
-            <label for="activity-type">Activity Type</label>
-            <select id="activity-type">
-                <option value="walk">🚶 Walk</option>
-                <option value="run">🏃 Run</option>
-                <option value="gym">🏋️ Gym</option>
-                <option value="sport">⚽ Sport</option>
-                <option value="yoga">🧘 Yoga</option>
-                <option value="swim">🏊 Swim</option>
-                <option value="dance">💃 Dance</option>
-                <option value="other">💪 Other</option>
-            </select>
+            <label for="sleep-bedtime">Bedtime</label>
+            <input type="time" id="sleep-bedtime" value="23:00">
         </div>
         <div class="form-group">
-            <label for="activity-minutes">Minutes</label>
-            <input type="number" id="activity-minutes" min="1" max="300" value="30" placeholder="Minutes of activity">
+            <label for="sleep-wake">Wake Time</label>
+            <input type="time" id="sleep-wake" value="07:00">
         </div>
-        <button class="btn btn-primary btn-full" id="activity-save">Log Activity</button>
-        <div id="activity-feedback" class="feedback-msg" style="display:none;"></div>
-    </div>
-
-    <!-- Today's Activity Summary -->
-    <div class="card">
-        <h3 class="card-title">Today's Progress</h3>
-        <div class="progress-container">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill activity-fill" id="activity-bar" style="width:0%;"></div>
+        <div class="form-group">
+            <label>Sleep Quality</label>
+            <div class="rating-picker" id="sleep-rating-picker">
+                <button class="rating-btn" data-rating="1" aria-label="Terrible">😫</button>
+                <button class="rating-btn" data-rating="2" aria-label="Poor">😕</button>
+                <button class="rating-btn selected" data-rating="3" aria-label="Okay">😐</button>
+                <button class="rating-btn" data-rating="4" aria-label="Good">😊</button>
+                <button class="rating-btn" data-rating="5" aria-label="Great">🤩</button>
             </div>
-            <p class="progress-text" id="activity-progress-text">0 / 30 minutes goal</p>
+            <input type="hidden" id="sleep-quality" value="3">
         </div>
-        <div class="activity-log" id="activity-log">
-            <h4>Today's Activities</h4>
-            <ul id="activity-list" class="log-list"></ul>
+        <div class="form-group">
+            <label for="sleep-note">Notes (optional)</label>
+            <input type="text" id="sleep-note" placeholder="e.g., Had trouble falling asleep" maxlength="100">
         </div>
+        <button class="btn btn-primary btn-full" id="sleep-save">Log Sleep</button>
+        <div id="sleep-feedback" class="feedback-msg" style="display:none;"></div>
     </div>
 
-    <!-- AI Water Tracking -->
+    <!-- Sleep History -->
+    <div class="card">
+        <h3 class="card-title">Recent Sleep</h3>
+        <div id="sleep-summary" class="sleep-summary">
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-avg">--</span><span class="sleep-stat-label">avg hours</span></div>
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-streak">0</span><span class="sleep-stat-label">day streak</span></div>
+            <div class="sleep-stat"><span class="sleep-stat-num" id="sleep-quality-avg">--</span><span class="sleep-stat-label">avg quality</span></div>
+        </div>
+        <ul id="sleep-list" class="log-list">
+            <li class="log-empty">No sleep logged yet.</li>
+        </ul>
+    </div>
+
+    <!-- AI Sleep Tips -->
     <div class="card ai-card">
-        <h3 class="card-title">🤖 AI Water Tracker</h3>
-        <p class="card-subtitle">Snap a photo of your water bottles/cups — AI counts how many you have.</p>
-        <button class="btn btn-primary" id="ai-water-btn">📷 Scan Water</button>
-        <div class="ai-spinner" id="ai-water-spinner" style="display:none;">🔍 Counting your cups…</div>
-        <div class="ai-preview" id="ai-water-preview" style="display:none;"></div>
-        <div class="ai-result" id="ai-water-result" style="display:none;"></div>
-    </div>
-
-    <!-- Stretch Break Reminder -->
-    <div class="card">
-        <h3 class="card-title">Stretch Break</h3>
-        <p class="card-subtitle">Studying for hours? Take a 5-minute stretch break.</p>
-        <div class="stretch-timer-container">
-            <div class="stretch-timer-display" id="stretch-timer-display">05:00</div>
-            <div class="stretch-state" id="stretch-state">Ready to stretch?</div>
-        </div>
-        <div class="stretch-actions">
-            <button class="btn btn-primary" id="stretch-start">Start Break</button>
-            <button class="btn btn-secondary" id="stretch-reset">Reset</button>
-        </div>
-        <div class="stretch-exercises" id="stretch-exercises">
-            <h4>Quick Stretches</h4>
-            <div class="stretch-grid">
-                <div class="stretch-item">
-                    <span class="stretch-emoji">🙆</span>
-                    <p>Neck rolls — 30 seconds</p>
-                </div>
-                <div class="stretch-item">
-                    <span class="stretch-emoji">🤸</span>
-                    <p>Shoulder shrugs — 30 seconds</p>
-                </div>
-                <div class="stretch-item">
-                    <span class="stretch-emoji">🧘</span>
-                    <p>Forward fold — 1 minute</p>
-                </div>
-                <div class="stretch-item">
-                    <span class="stretch-emoji">💃</span>
-                    <p>Wrist circles — 30 seconds</p>
-                </div>
-                <div class="stretch-item">
-                    <span class="stretch-emoji">🦵</span>
-                    <p>Leg stretches — 1 minute</p>
-                </div>
-            </div>
-        </div>
+        <h3 class="card-title">🤖 AI Sleep Coach</h3>
+        <p class="card-subtitle">Get personalized tips based on your sleep patterns.</p>
+        <button class="btn btn-primary" id="sleep-ai-btn">💤 Analyze My Sleep</button>
+        <div class="ai-spinner" id="sleep-ai-spinner" style="display:none;">🔍 Analyzing your sleep…</div>
+        <div class="ai-result" id="sleep-ai-result" style="display:none;"></div>
     </div>
 </section>
 
@@ -166,7 +130,7 @@
             <span class="nav-icon">🧠</span>
             <span class="nav-label">Mind</span>
         </a>
-        <a href="/physical-health" class="nav-item active" aria-label="Physical Health">
+        <a href="/physical-health" class="nav-item " aria-label="Physical Health">
             <span class="nav-icon">💪</span>
             <span class="nav-label">Body</span>
         </a>
@@ -178,7 +142,7 @@
             <span class="nav-icon">📚</span>
             <span class="nav-label">Study</span>
         </a>
-        <a href="/sleep" class="nav-item " aria-label="Sleep Tracker">
+        <a href="/sleep" class="nav-item active" aria-label="Sleep Tracker">
             <span class="nav-icon">😴</span>
             <span class="nav-label">Sleep</span>
         </a>
