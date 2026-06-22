@@ -102,16 +102,9 @@ firebase deploy --only hosting
 npx wrangler deploy
 ```
 
-### Environment Variables
-- `MISTRAL_API_KEY` — Cloudflare Worker secret for AI features
-
-## Setting Up Auth
-
-1. [Firebase Console → Auth → Sign-in method](https://console.firebase.google.com/project/wellbeing-companion-app/authentication/providers)
-2. Enable **Google** (one click), **Email/Password** (one click)
-3. **Microsoft** requires Azure AD app registration
-
 ## CyberTech
 
-A [CyberTech](https://cybertech-co.web.app) product — student-made, student-driven.  
+A [CyberTech](https://cybertech-co.web.app) product — student-made, student-driven.
+Other CyberTech Websites: [Smart Study](https://smart-study-site.web.app), [SmartChatter](https://smartchatter.web.app) and [Smart Study Wiki](https://smart-study-wiki.web.app).  
+
 [GitHub](https://github.com/RyanL1028/wellbeing-companion)
