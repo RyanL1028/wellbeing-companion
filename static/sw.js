@@ -2,7 +2,7 @@
  * Wellbeing-Companion — Service Worker
  * Offline support + smart reminders via notifications.
  */
-const CACHE_NAME = 'wellness-v6';
+const CACHE_NAME = 'wellness-v8';
 
 const PRE_CACHE = [
     '/',

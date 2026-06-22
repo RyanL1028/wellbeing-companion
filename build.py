@@ -21,6 +21,7 @@ ROUTES = {
     '/nutrition': 'nutrition.html',
     '/study-life': 'study-life.html',
     '/sleep': 'sleep.html',
+    '/gratitude': 'gratitude.html',
     '/auth': 'auth.html',
 }
 

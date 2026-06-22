@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set page_id = "gratitude" %}
+{% block title %}Gratitude Journal — MySmartHealth{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <h2 class="section-title">✍️ Gratitude Journal</h2>
+
+    <div class="card">
+        <h3 class="card-title">What are you grateful for today?</h3>
+        <p class="card-subtitle">Write 3 things you're thankful for. Research shows this boosts happiness and reduces stress.</p>
+        <div class="form-group">
+            <input type="text" id="gratitude-1" placeholder="1. I'm grateful for..." maxlength="150">
+        </div>
+        <div class="form-group">
+            <input type="text" id="gratitude-2" placeholder="2. I'm grateful for..." maxlength="150">
+        </div>
+        <div class="form-group">
+            <input type="text" id="gratitude-3" placeholder="3. I'm grateful for..." maxlength="150">
+        </div>
+        <button class="btn btn-primary btn-full" id="gratitude-save">Save Today's Gratitude</button>
+        <div id="gratitude-feedback" class="feedback-msg" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+        <h3 class="card-title">Recent Entries</h3>
+        <ul id="gratitude-list" class="log-list">
+            <li class="log-empty">No gratitude entries yet. Start today!</li>
+        </ul>
+    </div>
+</section>
+{% endblock %}

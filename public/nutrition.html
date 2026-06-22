@@ -3,16 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="PVpMGvC5IxB6HTCGXpfYxbIMX9e6ZT_kZVnd1Q3KwSk" />
     <meta name="theme-color" content="#4CAF50">
     <meta name="description" content="Wellbeing-Companion — Your all-in-one student health and wellbeing tracker.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="manifest" href="/static/manifest.json">
+    <script>
+        // Per-site <title> and meta
+        if (window.location.hostname === 'smarthealth-site.web.app') {
+            document.title = 'MySmartHealth Hub';
+            document.querySelector('meta[name="description"]').setAttribute('content', 'MySmartHealth — Your AI-powered student health & wellbeing tracker. Formerly Wellness Companion.');
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#43A047');
+        }
+    </script>
+    <script>
+    (function() {
+        var host = window.location.hostname;
+        var saved = null;
+        try { saved = localStorage.getItem('wellness-theme'); } catch(e) {}
+        var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (sysDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+
+        // New site: branding + AI enabled. Old site: AI disabled.
+        if (host === 'smarthealth-site.web.app') {
+            document.addEventListener('DOMContentLoaded', function() {
+                var t = document.querySelector('.app-title');
+                if (t) t.textContent = 'MySmartHealth';
+                var sub = document.createElement('div');
+                sub.style.cssText = 'font-size:0.6rem;color:var(--text-muted);font-weight:500;';
+                sub.textContent = 'Formerly Wellness Companion';
+                t.parentNode.appendChild(sub);
+            });
+        }
+    })();
+    </script>
     <link rel="stylesheet" href="/static/style.css?v=5">
     <title>Nutrition — Wellbeing-Companion</title>
 </head>
 <body data-page="nutrition">
+    <!-- Migration Modal (old site — every visit) -->
+    <div id="migration-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:350;align-items:center;justify-content:center;padding:1rem;">
+        <div style="background:var(--card-bg-solid);border-radius:20px;padding:2rem 1.5rem;max-width:400px;text-align:center;animation:slideUp 0.4s ease;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <span style="font-size:3rem;">🚀</span>
+            <h2 style="margin:0.5rem 0;font-size:1.4rem;">We've Moved to MySmartHealth!</h2>
+            <p style="color:var(--text-secondary);margin-bottom:0.5rem;">This site stays available but all new features are on:</p>
+            <a href="https://smarthealth-site.web.app" style="display:block;background:var(--primary);color:#fff;padding:0.75rem;border-radius:10px;font-weight:700;font-size:1rem;text-decoration:none;margin:0.75rem 0;">Go to MySmartHealth →</a>
+            <p style="font-size:0.75rem;color:var(--text-muted);">Same app, better name — always free</p>
+            <button class="btn btn-small" id="migration-close" style="margin-top:0.5rem;background:var(--border);">Close</button>
+        </div>
+    </div>
+    <script>
+    (function() {
+        if (window.location.hostname === 'smarthealth-site.web.app') return;
+        setTimeout(function() { document.getElementById('migration-modal').style.display = 'flex'; }, 500);
+        document.getElementById('migration-close').addEventListener('click', function() {
+            document.getElementById('migration-modal').style.display = 'none';
+        });
+    })();
+    </script>
+
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -23,8 +75,8 @@
             <h1 class="app-title">Wellness</h1>
         </div>
         <div class="header-right">
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle dark mode" title="Dark/Light mode">🌓</button>
             <span id="current-date" class="current-date"></span>
-            <!-- Auth area: sign-in button or user menu -->
             <span id="auth-area">
                 <button id="auth-signin-btn" class="auth-btn" aria-label="Sign in with Microsoft">
                     <span class="auth-icon">🔐</span> Sign in
@@ -142,8 +194,51 @@
 
     <!-- CyberTech Footer -->
     <div style="text-align:center;padding:10px;font-size:0.72rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:20px">
-        A <a href="https://cybertech-co.web.app" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500;text-decoration:none">CyberTech</a> product — student-made, student-driven
+        A <a href="https://cybertech-co.web.app" target="_blank" rel="noopener" style="color:var(--accent);font-weight:500;text-decoration:none">CyberTech</a> product — student-made, student-driven &nbsp;·&nbsp;
+        <a href="https://github.com/RyanL1028/wellbeing-companion" target="_blank" rel="noopener" style="color:var(--text-secondary);font-weight:500;text-decoration:none">GitHub</a>
+        <span id="rating-widget" style="margin-left:8px;cursor:pointer;font-size:1rem;" title="Rate us!">
+            <span class="rating-star" data-r="1">☆</span><span class="rating-star" data-r="2">☆</span><span class="rating-star" data-r="3">☆</span><span class="rating-star" data-r="4">☆</span><span class="rating-star" data-r="5">☆</span>
+        </span>
     </div>
+
+    <!-- Simple Onboarding Overlay -->
+    <div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg-solid);border-radius:16px;padding:2rem;max-width:360px;text-align:center;animation:slideUp 0.3s ease;">
+            <span style="font-size:3rem;">🌱</span>
+            <h2 style="margin:0.5rem 0;">Welcome to MySmartHealth!</h2>
+            <p style="color:var(--text-secondary);margin-bottom:1rem;">Your all-in-one AI wellness companion. Track, improve, and understand your health — all in one place.</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);">💡 <strong>Tip:</strong> Tap 🤖 to chat with your AI wellness coach!</p>
+            <button class="btn btn-primary" id="onboarding-close" style="margin-top:1rem;">Get Started</button>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var seen = false;
+        try { seen = localStorage.getItem('onboarding-done') === '1'; } catch(e) {}
+        if (!seen) {
+            setTimeout(function() {
+                document.getElementById('onboarding-overlay').style.display = 'flex';
+            }, 1000);
+        }
+        document.getElementById('onboarding-close').addEventListener('click', function() {
+            document.getElementById('onboarding-overlay').style.display = 'none';
+            try { localStorage.setItem('onboarding-done', '1'); } catch(e) {}
+        });
+        // Rating stars
+        var stars = document.querySelectorAll('.rating-star');
+        stars.forEach(function(s) {
+            s.addEventListener('click', function() {
+                var r = this.dataset.r;
+                stars.forEach(function(x, i) { x.textContent = i < r ? '★' : '☆'; x.style.color = i < r ? '#F59E0B' : ''; });
+                try { localStorage.setItem('app-rating', r); } catch(e) {}
+                alert('⭐ Thanks for rating us ' + r + '/5!');
+            });
+        });
+        var savedRating = null;
+        try { savedRating = localStorage.getItem('app-rating'); } catch(e) {}
+        if (savedRating) { stars.forEach(function(x, i) { if (i < savedRating) { x.textContent = '★'; x.style.color = '#F59E0B'; } }); }
+    })();
+    </script>
 
     <!-- AI Wellness Coach Chatbot -->
     <div class="chat-fab" id="chat-fab" aria-label="AI Wellness Coach">
@@ -158,7 +253,12 @@
             </div>
         </div>
         <div class="chat-messages" id="chat-messages">
-            <div class="chat-msg bot">Hi! I'm your AI wellness coach. <br><br>🔐 <strong>Sign in required</strong> — your data helps me give personalized advice.<br><small>(6 messages/day — free!)</small></div>
+            <div class="chat-msg bot">Hi! I'm your personal wellness coach. Ask me anything about your health!<br><small>First visit: 6 free · Daily: 4 · Share for 6</small></div>
+        <div class="chat-messages" id="chat-messages" style="flex:1;"></div>
+        <div style="padding:0 0.75rem 0.4rem;text-align:center;">
+            <button class="btn btn-small" id="chat-share-btn" style="font-size:0.72rem;width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:0.4rem;">📋 Copy Share Link → 6 msg/day</button>
+        </div>
+        <div class="chat-input-area">
         </div>
         <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="Ask me anything..." maxlength="200">
@@ -191,6 +291,10 @@
         <a href="/sleep" class="nav-item " aria-label="Sleep Tracker">
             <span class="nav-icon">😴</span>
             <span class="nav-label">Sleep</span>
+        </a>
+        <a href="/gratitude" class="nav-item " aria-label="Gratitude Journal">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-label">Gratitude</span>
         </a>
     </nav>
 
@@ -302,5 +406,21 @@
     </script>
 
     
+
+    <script>
+    (function() {
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        btn.addEventListener('click', function() {
+            var next = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            btn.textContent = next === 'light' ? '☀️' : '🌙';
+            theme = next;
+            try { localStorage.setItem('wellness-theme', next); } catch(e) {}
+        });
+    })();
+    </script>
 </body>
 </html>

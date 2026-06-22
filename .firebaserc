@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "wellbeing-companion-app"
-  }
+  },
+  "targets": {
+    "wellbeing-companion-app": {
+      "hosting": {
+        "smarthealth-site": [
+          "smarthealth-site"
+        ],
+        "wellbeing-companion-app": [
+          "wellbeing-companion-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -106,5 +106,22 @@
         <button class="btn btn-small" id="reminders-enable" style="margin-top:0.75rem;background:var(--primary-light);color:var(--primary-dark);border:2px solid var(--primary);">🔔 Enable Notifications</button>
         <button class="btn btn-primary btn-small" id="reminders-test" style="margin-top:0.5rem;">🧪 Send Test Notification</button>
     </div>
+
+    <!-- Weekly Goals -->
+    <div class="card">
+        <h3 class="card-title">🎯 Weekly Goals</h3>
+        <div class="goals-grid">
+            <div class="goal-item"><span>💧 Water (glasses/day)</span><input type="number" id="goal-water" min="1" max="20" value="8" onchange="Storage.setWeeklyGoal('waterTarget',parseInt(this.value))"></div>
+            <div class="goal-item"><span>🏃 Activity (min/day)</span><input type="number" id="goal-activity" min="5" max="300" value="30" onchange="Storage.setWeeklyGoal('activityTarget',parseInt(this.value))"></div>
+            <div class="goal-item"><span>📚 Study (min/day)</span><input type="number" id="goal-study" min="5" max="600" value="120" onchange="Storage.setWeeklyGoal('studyTarget',parseInt(this.value))"></div>
+            <div class="goal-item"><span>😴 Sleep (hours/night)</span><input type="number" id="goal-sleep" min="4" max="12" value="8" onchange="Storage.setWeeklyGoal('sleepTarget',parseInt(this.value))"></div>
+        </div>
+    </div>
+
+    <!-- Weekly Report + Export -->
+    <div class="card" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="weekly-report-btn" style="flex:1;min-width:140px;">📊 Weekly AI Report</button>
+        <button class="btn btn-outline" id="export-data-btn" style="flex:1;min-width:140px;">📥 Export Data</button>
+    </div>
 </section>
 {% endblock %}

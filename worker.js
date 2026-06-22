@@ -42,7 +42,7 @@ export default {
           body: JSON.stringify({
             model: "mistral-small-latest",
             messages: [
-              { role: "system", content: "You are a friendly wellness coach for students. Give short, actionable, encouraging advice. Keep responses under 120 words. Never give medical advice." },
+              { role: "system", content: "You are a friendly wellness coach for students. Give short, actionable, encouraging advice. Keep responses under 120 words. Try not to give medical advice unless asked explicitly and if so, make sure to state that you are not a medical professional and for proffesional advice they should consult a healthcare provider (e.g. doctor)." },
               { role: "user", content: prompt }
             ],
             max_tokens: 250,

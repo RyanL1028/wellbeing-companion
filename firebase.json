@@ -1,45 +1,60 @@
 {
-  "hosting": {
-    "public": "public",
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css|png|jpg|svg|ico|woff2)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=3600"
-          }
-        ]
-      },
-      {
-        "source": "**/*.@(html|json)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=3600"
-          }
-        ]
-      },
-      {
-        "source": "sw.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=0"
-          },
-          {
-            "key": "Service-Worker-Allowed",
-            "value": "/"
-          }
-        ]
-      }
-    ]
-  }
+  "hosting": [
+    {
+      "target": "wellbeing-companion-app",
+      "public": "public",
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|css|png|jpg|svg|ico|woff2)",
+          "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+        },
+        {
+          "source": "**/*.@(html|json)",
+          "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+        },
+        {
+          "source": "sw.js",
+          "headers": [
+            { "key": "Cache-Control", "value": "max-age=0" },
+            { "key": "Service-Worker-Allowed", "value": "/" }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "smarthealth-site",
+      "public": "public",
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|css|png|jpg|svg|ico|woff2)",
+          "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+        },
+        {
+          "source": "**/*.@(html|json)",
+          "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+        },
+        {
+          "source": "sw.js",
+          "headers": [
+            { "key": "Cache-Control", "value": "max-age=0" },
+            { "key": "Service-Worker-Allowed", "value": "/" }
+          ]
+        }
+      ]
+    }
+  ]
 }

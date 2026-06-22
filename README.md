@@ -1,76 +1,117 @@
-# Wellbeing-Companion 🌱
+# MySmartHealth 🌱
 
-A responsive web app for student health and wellbeing, built for **SDG 3: Good Health and Wellbeing**.
+An AI-powered student health & wellbeing PWA — built for **SDG 3: Good Health and Wellbeing**.
 
-> **Live Demo:** [wellbeing-companion-app.web.app](https://wellbeing-companion-app.web.app)
+> **Primary:** [smarthealth-site.web.app](https://smarthealth-site.web.app)  
+> **Legacy:** [wellbeing-companion-app.web.app](https://wellbeing-companion-app.web.app) *(AI limited to 2 msg/day)*
 
 ## About
 
-Wellbeing-Companion helps students track and improve their wellbeing across five key areas:
+MySmartHealth helps students track and improve their wellbeing across six areas with AI-powered photo analysis, smart reminders, and a personalized wellness coach.
 
 | Page | Features |
 |---|---|
-| 🏠 **Dashboard** | Wellness score, daily streaks, quick-add logging |
-| 🧠 **Mental Health** | Mood journal, 4-7-8 breathing exercise, crisis resources |
-| 💪 **Physical Health** | Activity logger, stretch break timer with exercises |
-| 🥗 **Nutrition** | Water tracker (8-glass goal), meal logger with ratings |
-| 📚 **Study-Life** | Pomodoro timer, study session logger, break reminders |
+| 🏠 **Dashboard** | Wellness score, streaks, achievements, goals, weekly AI report |
+| 🧠 **Mental Health** | Mood journal, 4-7-8 breathing, crisis resources |
+| 💪 **Physical Health** | Activity logger, stretch timer, AI water tracker |
+| 🥗 **Nutrition** | Water tracker, meal logger, AI food analysis (calories/macros) |
+| 📚 **Study-Life** | Pomodoro timer, study logger, AI study verification |
+| 😴 **Sleep** | Bedtime/wake-time logger, quality tracking, AI sleep tips |
+| ✍️ **Gratitude** | Daily gratitude journal, 14-day history |
+| 🤖 **AI Coach** | Chatbot — 6 free on first visit, 4/day, share for 6/day |
+| 🔔 **Reminders** | Water, stretch, bedtime, study — toggle on/off |
+| 🌓 **Theme** | Manual dark/light toggle, saved per-device |
+| ⭐ **Rating** | 5-star rating widget in footer |
 
 ## How It Works
 
-- **Local-first storage** — Your health data is stored in your browser via `localStorage` and syncs to Firestore when signed in.
-- **Google & Microsoft Sign-in** — Optionally sign in with your Google or Microsoft account to back up your data to the cloud and access it across devices. Firebase Auth persists your session so you stay signed in.
-- **Works offline** — After your first visit, the app works without internet (PWA with Service Worker).
-- **Installable** — Add to your phone's home screen for a native app feel (PWA).
-- **Responsive** — Works on desktop, tablet, and mobile.
+- **Local-first** — data in `localStorage`, sync to Firestore when signed in
+- **AI-powered** — photo → nutrition facts, water cup count, study verification
+- **Smart reminders** — page + service worker timers, native notifications
+- **Offline PWA** — installable, cache-first SW, works without internet
+- **Google, Microsoft & Email sign-in** — required for AI chatbot, optional otherwise
+- **Export** — download all wellness data as JSON
+- **Metric** — all measurements in metric (metres, ml, etc.)
 
 ## Tech Stack
 
-- **Frontend:** Vanilla HTML, CSS, and JavaScript (no frameworks, no build tools)
-- **Local Dev Server:** Python Flask (one file, ~30 lines)
-- **Client Storage:** `localStorage` (local-first, offline-capable)
-- **Cloud Storage:** Firebase Firestore (syncs when signed in)
-- **Authentication:** Firebase Auth with Google and Microsoft (Azure AD) providers
-- **PWA:** Service Worker + Web App Manifest
-- **Hosting:** Firebase Hosting
+| Layer | Technology |
+|---|---|
+| Frontend | Vanilla HTML, CSS, JavaScript (zero frameworks) |
+| Dev Server | Python Flask + Jinja2 |
+| Storage | `localStorage` (local-first) + Firebase Firestore (cloud sync) |
+| Auth | Firebase Auth (Google, Microsoft, Email/Password) |
+| AI Vision | Mistral `pixtral-12b-2409` |
+| AI Text | Mistral `mistral-small-latest` |
+| AI Backend | Cloudflare Worker (free tier, 100k req/day) |
+| PWA | Service Worker + Web App Manifest |
+| Hosting | Firebase Hosting (multi-site) |
+| CI/CD | Git + manual `firebase deploy` |
 
 ## Project Structure
 
 ```
-├── app.py                  # Flask dev server
-├── build.py                # Build static site for deployment
-├── firebase.json           # Firebase Hosting configuration
-├── .firebaserc             # Firebase project reference
-├── requirements.txt        # Python dependencies
+├── app.py                  # Flask dev server + /api/analyze
+├── build.py                # Jinja2 → static HTML
+├── worker.js               # Cloudflare Worker (AI proxy)
+├── wrangler.toml           # Worker config
+├── firebase.json           # Multi-site hosting config
+├── .firebaserc             # Project targets
+├── requirements.txt        # flask, flask-cors, openai
 │
-├── templates/              # Jinja2 HTML templates (source)
-│   ├── base.html           # Shared layout (nav, header, scripts)
+├── templates/
+│   ├── base.html           # Layout, nav, theme toggle, chatbot, footer
 │   ├── index.html          # Dashboard
-│   ├── mental-health.html  # Mental wellbeing tools
-│   ├── physical-health.html# Physical health tools
-│   ├── nutrition.html      # Nutrition & hydration
-│   └── study-life.html     # Study-life balance
+│   ├── mental-health.html  # Mood + breathing
+│   ├── physical-health.html# Activity + stretch + AI water
+│   ├── nutrition.html      # Water + meals + AI food
+│   ├── study-life.html     # Pomodoro + AI study
+│   ├── sleep.html          # Sleep tracker + AI tips
+│   ├── gratitude.html      # Gratitude journal
+│   └── auth.html           # Sign in / sign up
 │
-├── static/                 # Static assets
-│   ├── style.css           # All styles (responsive, dark mode)
-│   ├── storage.js          # localStorage data layer
-│   ├── app.js              # App logic (page router + features)
-│   ├── sw.js               # Service Worker (offline support)
-│   ├── manifest.json       # PWA manifest
-│   └── icons/              # PWA icons (192px, 512px)
+├── static/
+│   ├── style.css           # All styles (responsive, dark/light themes)
+│   ├── app.js              # Pages, AI, chatbot, notifications, export
+│   ├── storage.js          # Data layer + Firestore sync
+│   ├── auth.js             # Firebase Auth
+│   ├── sw.js               # Service Worker (offline + reminders)
+│   ├── firebase-config.example.js
+│   ├── manifest.json
+│   └── icons/
 │
-└── public/                 # Built output (deployed to Firebase)
+└── public/                 # Built output (deployed)
 ```
 
 ## Running Locally
 
 ```bash
-# Install dependencies
-python3 -m pip install flask
-
-# Run development server
+pip install -r requirements.txt
 python3 app.py
 # Open http://localhost:5555
 ```
 
-Built for the SDG 3 (Health & Wellbeing) Hackathon. The app addresses student health holistically — mental, physical, nutritional, and academic wellbeing — in a single, accessible tool.
+## Deployment
+
+```bash
+# Frontend (both sites)
+python3 build.py
+firebase deploy --only hosting
+
+# AI Backend
+npx wrangler deploy
+```
+
+### Environment Variables
+- `MISTRAL_API_KEY` — Cloudflare Worker secret for AI features
+
+## Setting Up Auth
+
+1. [Firebase Console → Auth → Sign-in method](https://console.firebase.google.com/project/wellbeing-companion-app/authentication/providers)
+2. Enable **Google** (one click), **Email/Password** (one click)
+3. **Microsoft** requires Azure AD app registration
+
+## CyberTech
+
+A [CyberTech](https://cybertech-co.web.app) product — student-made, student-driven.  
+[GitHub](https://github.com/RyanL1028/wellbeing-companion)

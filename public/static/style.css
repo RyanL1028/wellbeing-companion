@@ -41,26 +41,24 @@
     --study-color: #10B981;
 }
 
-/* ---- Dark Mode ---- */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #0f172a;
-        --bg-gradient: linear-gradient(160deg, #0f172a 0%, #1a1f35 30%, #1a1725 70%, #0f172a 100%);
-        --card-bg: rgba(30, 41, 59, 0.75);
-        --card-bg-solid: #1e293b;
-        --text: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
-        --border: #334155;
-        --border-light: #1e293b;
-        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-        --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
-        --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.55);
-        --ring-bg: #334155;
-        --primary-light: rgba(67, 160, 71, 0.15);
-        --accent-light: rgba(255, 143, 0, 0.12);
-    }
+/* Manual theme (replaces @media — JS sets data-theme) */
+[data-theme="dark"] {
+    --bg: #0f172a;
+    --bg-gradient: linear-gradient(160deg, #0f172a 0%, #1a1f35 30%, #1a1725 70%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.75);
+    --card-bg-solid: #1e293b;
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #334155;
+    --border-light: #1e293b;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.55);
+    --ring-bg: #334155;
+    --primary-light: rgba(67, 160, 71, 0.15);
+    --accent-light: rgba(255, 143, 0, 0.12);
 }
 
 /* ---- Reset & Base ---- */
@@ -1201,11 +1199,12 @@ main {
 
 /* ---- Wellness Tip (Dashboard) ---- */
 .wellness-tip {
-    background: linear-gradient(135deg, var(--primary-light), #FFF8E1);
+    background: var(--card-bg-solid);
     border-left: 4px solid var(--primary);
     border-radius: var(--radius-sm);
     padding: 1rem 1.25rem;
     margin-top: 0.5rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .wellness-tip .tip-label {
@@ -1253,6 +1252,20 @@ main {
     .section-title { font-size: 1.8rem; }
     .bottom-nav { max-width: 500px; }
 }
+
+/* ---- Theme Toggle ---- */
+.theme-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    line-height: 1;
+    transition: transform var(--transition);
+    -webkit-tap-highlight-color: transparent;
+}
+.theme-btn:hover { transform: scale(1.2); }
 
 /* ---- Auth Header Button ---- */
 .header-right {
@@ -1926,6 +1939,12 @@ main {
     outline: none;
     border-color: var(--primary);
 }
+
+/* ---- Goals ---- */
+.goals-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+.goal-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0; }
+.goal-item span { font-size: 0.85rem; font-weight: 600; }
+.goal-item input { width: 70px; padding: 0.4rem 0.5rem; border: 2px solid var(--border); border-radius: var(--radius-sm); text-align: center; font-size: 0.9rem; font-family: var(--font); background: var(--bg); color: var(--text); }
 
 /* ---- Smart Reminders ---- */
 .reminders-card {

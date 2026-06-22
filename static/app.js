@@ -160,6 +160,11 @@ var Chat = {
             if (!fab || !modal) return;
 
             this._updateLimit();
+            // Update greeting for old site
+            if (window.location.hostname !== 'smarthealth-site.web.app') {
+                var msgs = document.querySelectorAll('.chat-msg.bot');
+                if (msgs.length > 0) msgs[0].innerHTML = 'Hi! I\'m your personal wellness coach.<br><small>(2 messages/day — upgrade to MySmartHealth for 4+)</small>';
+            }
 
             fab.addEventListener('click', function() {
                 modal.style.display = 'flex';
@@ -174,7 +179,53 @@ var Chat = {
 
             document.getElementById('chat-send').addEventListener('click', function() { self._send(); });
             document.getElementById('chat-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') self._send(); });
+            var shareBtn = document.getElementById('chat-share-btn');
+            if (shareBtn) {
+                if (window.location.hostname !== 'smarthealth-site.web.app') {
+                    shareBtn.style.display = 'none';
+                } else {
+                    shareBtn.addEventListener('click', function() { self.shareToSmartChatter(); });
+                }
+            }
         } catch(e) { /* fail silently */ }
+    },
+
+    _max: function() {
+        // Old site: only 2 msg/day
+        if (window.location.hostname !== 'smarthealth-site.web.app') return 2;
+        var shared = false;
+        try { shared = localStorage.getItem('chat-shared') === '1'; } catch(e) {}
+        var bonus = false;
+        try { bonus = localStorage.getItem('chat-bonus') !== 'used'; } catch(e) {}
+        if (bonus) return 6;
+        return shared ? 6 : 4;
+    },
+
+    shareToSmartChatter: function() {
+        var self = this;
+        var url = 'https://smarthealth-site.web.app?ref=shared';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function() {
+                self._addMsg('bot', '📋 Link copied! Open it in a <strong>new tab</strong> to verify and unlock 6 msg/day. <br><br><a href="' + url + '" target="_blank" style="color:var(--accent);font-weight:700;">→ Open shared link now</a>');
+            }).catch(function() {
+                self._promptShare(url);
+            });
+        } else {
+            this._promptShare(url);
+        }
+    },
+
+    _promptShare: function(url) {
+        var self = this;
+        alert('Share this link with a friend:\n\n' + url + '\n\nThen open it in a new tab to unlock.');
+        self._addMsg('bot', '📋 Open the link in a new tab to verify and unlock 6 msg/day. <br><br><a href="' + url + '" target="_blank" style="color:var(--accent);font-weight:700;">→ Open shared link now</a>');
+    },
+
+    _grantShare: function() {
+        try { localStorage.setItem('chat-shared', '1'); } catch(e) {}
+        try { localStorage.setItem('chat-bonus', 'used'); } catch(e) {}
+        this._updateLimit();
+        this._addMsg('bot', '✅ Verified! You now have 6 messages/day. 🎉');
     },
 
     _getCount: function() {
@@ -184,11 +235,17 @@ var Chat = {
         try { var d = JSON.parse(saved); return d.date === today ? d : { date: today, count: 0 }; } catch(e) { return { date: today, count: 0 }; }
     },
 
+    _useBonus: function() {
+        try { localStorage.setItem('chat-bonus', 'used'); } catch(e) {}
+        this._updateLimit();
+    },
+
     _updateLimit: function() {
         var d = this._getCount();
-        var remaining = Math.max(0, 6 - d.count);
+        var max = this._max();
+        var remaining = Math.max(0, max - d.count);
         var el = document.getElementById('chat-limit');
-        if (el) el.textContent = remaining + '/5';
+        if (el) el.textContent = remaining + '/' + max;
         var sendBtn = document.getElementById('chat-send');
         if (sendBtn) sendBtn.disabled = remaining <= 0;
     },
@@ -201,14 +258,22 @@ var Chat = {
 
         // Require sign-in for AI chatbot
         if (typeof Auth === 'undefined' || !Auth.isSignedIn()) {
-            this._addMsg('bot', '🔐 Please <a href="/auth" style="color:var(--primary);">sign in</a> to use the AI coach. It\'s free!');
+            var el = this._addMsg('bot', '');
+            el.innerHTML = '🔐 <a href="/auth" style="color:var(--primary);font-weight:700;">Sign in</a> to chat with your personal wellness coach. It\'s free!';
             return;
         }
 
         var d = this._getCount();
-        if (d.count >= 6) { this._addMsg('bot', '⚠️ Daily limit reached! 6/6 messages used. Come back tomorrow!'); return; }
+        var max = this._max();
+        if (d.count >= max) {
+            var shareMsg = (max === 4) ? '<br><br>📋 <a href="#" onclick="Chat.shareToSmartChatter();return false;" style="color:var(--accent);font-weight:700;">Copy share link</a> to unlock 6/day.' : '';
+            this._addMsg('bot', '⚠️ ' + max + '/' + max + ' messages used today.' + shareMsg);
+            return;
+        }
         d.count++; localStorage.setItem(this._limitKey, JSON.stringify(d));
         this._updateLimit();
+        // Mark bonus as used on first message
+        this._useBonus();
 
         this._addMsg('user', msg);
         input.value = '';
@@ -350,6 +415,70 @@ var page = {
             try { this.showDailyTip(); } catch(e) {}
             try { this.initReminders(); } catch(e) {}
             try { this.renderAchievements(); } catch(e) {}
+            try { this.initGoals(); } catch(e) {}
+            try { this.initReport(); } catch(e) {}
+            try { this.initExport(); } catch(e) {}
+        },
+
+        initGoals: function() {
+            var goals = Storage.getWeeklyGoals();
+            ['water','activity','study','sleep'].forEach(function(k) {
+                var el = document.getElementById('goal-' + k);
+                if (el) el.value = goals[k] || '';
+            });
+        },
+
+        initReport: function() {
+            var btn = document.getElementById('weekly-report-btn');
+            if (!btn) return;
+            btn.addEventListener('click', function() {
+                btn.disabled = true; btn.textContent = '⏳ Generating...';
+                var data = {
+                    moods: Storage.getMoods().slice(-7),
+                    water: Storage.getWaterGlasses(Storage._todayKey()),
+                    activities: Storage.getActivities().slice(-7),
+                    study: Storage.getStudySessions().slice(-7),
+                    sleep: Storage.getSleepLog().slice(-7),
+                    gratitude: Storage.getGratitudeLog().slice(-7)
+                };
+                var prompt = 'Generate a weekly wellness report. Moods: ' + JSON.stringify(data.moods) + '. Water today: ' + data.water + ' glasses. Activities: ' + JSON.stringify(data.activities) + '. Study: ' + JSON.stringify(data.study) + '. Sleep: ' + JSON.stringify(data.sleep) + '. Gratitude: ' + JSON.stringify(data.gratitude) + '. Give a brief summary (under 150 words) with highlights, averages, and 1-2 suggestions.';
+                fetch('https://wellbeing-companion.wellbeing-companion.workers.dev/api/analyze', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({image:'skip',type:'chat',prompt:prompt})
+                }).then(function(r){return r.json();}).then(function(d) {
+                    var tip = document.querySelector('.wellness-tip');
+                    if (!tip) {
+                        tip = document.createElement('div'); tip.className = 'wellness-tip';
+                        document.querySelector('.page-section').appendChild(tip);
+                    }
+                    var text = (d.reply || d.error || 'Could not generate report.').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                    tip.innerHTML = '<div class="tip-label">📊 Weekly AI Report</div><div class="tip-text">' + text + '</div>';
+                    btn.disabled = false; btn.textContent = '📊 Weekly AI Report';
+                }).catch(function() { btn.disabled = false; btn.textContent = '📊 Weekly AI Report'; });
+            });
+        },
+
+        initExport: function() {
+            var btn = document.getElementById('export-data-btn');
+            if (!btn) return;
+            btn.addEventListener('click', function() {
+                var data = {
+                    exported: new Date().toISOString(),
+                    moodLog: Storage.getMoods(),
+                    waterGlasses: (function(){var d={}; var k=Storage._todayKey(); d[k]=Storage.getWaterGlasses(k); return d;})(),
+                    meals: Storage.getMeals(),
+                    activities: Storage.getActivities(),
+                    studySessions: Storage.getStudySessions(),
+                    sleepLog: Storage.getSleepLog(),
+                    gratitudeLog: Storage.getGratitudeLog(),
+                    goals: Storage.getWeeklyGoals()
+                };
+                var json = JSON.stringify(data, null, 2);
+                var blob = new Blob([json], {type:'application/json'});
+                var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = 'wellness-data-' + new Date().toISOString().split('T')[0] + '.json';
+                a.click();
+            });
         },
 
         renderAchievements: function() {
@@ -575,7 +704,7 @@ var page = {
             var tips = [
                 'Take a 5-minute walk between study sessions to refresh your mind.',
                 'Drink a glass of water before your morning coffee or tea.',
-                'Try the 20-20-20 rule: every 20 min, look 20 feet away for 20 seconds.',
+                'Try the 20-20-20 rule: every 20 min, look 6 metres away for 20 seconds.',
                 'Aim for 7-9 hours of sleep — your brain consolidates memories during sleep.',
                 'Eating protein-rich breakfasts helps maintain focus throughout the morning.',
                 'Stretching for just 5 minutes can reduce tension from sitting at a desk.',
@@ -1477,6 +1606,47 @@ var page = {
         }
     },
     // ================================================
+    // Gratitude Journal
+    // ================================================
+    gratitude: {
+        _ready: false,
+        init: function() {
+            if (this._ready) return;
+            this._ready = true;
+            this.initSave();
+            this.render();
+        },
+        initSave: function() {
+            var self = this;
+            document.getElementById('gratitude-save').addEventListener('click', function() {
+                var items = [];
+                for (var i = 1; i <= 3; i++) {
+                    var v = document.getElementById('gratitude-' + i).value.trim();
+                    if (v) items.push(v);
+                }
+                if (!items.length) { Util.showFeedback(document.getElementById('gratitude-feedback'), 'Write at least one thing!', 'error'); return; }
+                items.forEach(function(item) { Storage.addGratitude(item); });
+                document.getElementById('gratitude-1').value = '';
+                document.getElementById('gratitude-2').value = '';
+                document.getElementById('gratitude-3').value = '';
+                Util.showFeedback(document.getElementById('gratitude-feedback'), 'Gratitude saved! ✨', 'success');
+                self.render();
+            });
+        },
+        render: function() {
+            var list = document.getElementById('gratitude-list');
+            if (!list) return;
+            var log = Storage.getGratitudeLog();
+            if (!log.length) { list.innerHTML = '<li class="log-empty">No gratitude entries yet. Start today!</li>'; return; }
+            var html = '';
+            log.slice(-14).reverse().forEach(function(g) {
+                html += '<li><span class="log-item-left"><span class="log-item-icon">✨</span><span>' + Util.formatDate(g.date) + '</span></span><span>' + g.text + '</span></li>';
+            });
+            list.innerHTML = html;
+        }
+    },
+
+    // ================================================
     // Sleep Tracker
     // ================================================
     sleep: {
@@ -1590,7 +1760,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Init chatbot on all pages
-    if (typeof Chat !== 'undefined') Chat.init();
+    if (typeof Chat !== 'undefined') {
+        Chat.init();
+        // If user visited via shared link, grant the bonus
+        if (window.location.search.indexOf('ref=shared') !== -1) {
+            Chat._grantShare();
+        }
+    }
 
     // Set current date in header
     var dateEl = document.getElementById('current-date');

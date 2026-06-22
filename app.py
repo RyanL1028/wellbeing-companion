@@ -74,6 +74,11 @@ def study_life():
     return render_template('study-life.html')
 
 
+@app.route('/gratitude')
+def gratitude():
+    return render_template('gratitude.html')
+
+
 @app.route('/sleep')
 def sleep():
     """Sleep tracker — log bedtime, wake time, quality."""

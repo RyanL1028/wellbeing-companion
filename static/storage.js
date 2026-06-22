@@ -190,6 +190,19 @@ var Storage = (function() {
         _write(data);
     }
 
+    // ---- Gratitude ----
+    function getGratitudeLog() { return _read().gratitudeLog || []; }
+    function addGratitude(entry) {
+        var data = _read();
+        if (!data.gratitudeLog) data.gratitudeLog = [];
+        data.gratitudeLog.push({ date: _today(), text: entry });
+        _write(data);
+    }
+
+    // ---- Goals ----
+    function getWeeklyGoals() { var g = _read().goals; return { water: g.waterTarget||8, activity: g.activityTarget||30, study: g.studyTarget||120, sleep: g.sleepTarget||8 }; }
+    function setWeeklyGoal(key, value) { var data = _read(); data.goals[key] = value; _write(data); }
+
     function getSleepStreak() {
         var data = _read();
         if (!data.sleepLog || !data.sleepLog.length) return 0;
@@ -413,6 +426,12 @@ var Storage = (function() {
         getSleepLog: getSleepLog,
         addSleep: addSleep,
         getSleepStreak: getSleepStreak,
+
+        getGratitudeLog: getGratitudeLog,
+        addGratitude: addGratitude,
+
+        getWeeklyGoals: getWeeklyGoals,
+        setWeeklyGoal: setWeeklyGoal,
 
         // Helpers
         _today: _today,
